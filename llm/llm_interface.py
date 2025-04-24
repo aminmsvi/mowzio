@@ -15,6 +15,7 @@ class LlmInterface:
         base_url: str,
         system_prompt: str = "You are a helpful assistant.",
         memory_strategy: MemoryStrategy = InMemoryStrategy(),
+        temperature: float = 0.1,
     ):
         """
         Initializes the OpenRouterChat client.
@@ -30,7 +31,8 @@ class LlmInterface:
         self.model = model
         self.base_url = base_url
         self.system_prompt_text = system_prompt
-        self.system_prompt = {"role": "system", "content": system_prompt} if system_prompt else None
+        self.system_prompt = {"role": "system", "content": system_prompt}
+        self.temperature = temperature
 
         if not api_key:
             raise ValueError("API key must be provided either as an argument or via OPENROUTER_API_KEY environment variable.")
@@ -71,6 +73,7 @@ class LlmInterface:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=self.memory_strategy.get_messages(),
+                temperature=self.temperature,
             )
 
             # Add checks for response and choices
