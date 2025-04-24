@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
-from typing import Optional, List, Dict
+from typing import List, Dict
+from memory_strategies import InMemoryStrategy, MemoryStrategy
 
 class LlmInterface:
     """
@@ -12,7 +13,8 @@ class LlmInterface:
         model: str,
         api_key: str,
         base_url: str,
-        system_prompt: Optional[str] = "You are a helpful assistant.",
+        system_prompt: str = "You are a helpful assistant.",
+        memory_strategy: MemoryStrategy = InMemoryStrategy(),
     ):
         """
         Initializes the OpenRouterChat client.
@@ -22,9 +24,12 @@ class LlmInterface:
             api_key: Your OpenRouter API key. Defaults to the OPENROUTER_API_KEY environment variable.
             base_url: The base URL for the OpenRouter API.
             system_prompt: The initial system prompt to set the context for the model.
+            memory_strategy: The strategy to use for storing and retrieving message history.
+                            If None, defaults to InMemoryStrategy.
         """
         self.model = model
         self.base_url = base_url
+        self.system_prompt_text = system_prompt
         self.system_prompt = {"role": "system", "content": system_prompt} if system_prompt else None
 
         if not api_key:
@@ -34,9 +39,12 @@ class LlmInterface:
             base_url=self.base_url,
             api_key=api_key,
         )
-        self._message_history: List[Dict[str, str]] = []
+
+        self.memory_strategy = memory_strategy
+
+        # Initialize message history with system prompt if one exists
         if self.system_prompt:
-            self._message_history.append(self.system_prompt)
+            self.memory_strategy.add_message(self.system_prompt)
 
     def chat(self, user_message: str) -> str:
         """
@@ -55,14 +63,14 @@ class LlmInterface:
             Exception: For other unexpected errors.
         """
         user_msg_dict = {"role": "user", "content": user_message}
-        self._message_history.append(user_msg_dict)
+        self.memory_strategy.add_message(user_msg_dict)
 
         assistant_response_content = ""
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=self._message_history,
+                messages=self.memory_strategy.get_messages(),
             )
 
             # Add checks for response and choices
@@ -71,30 +79,26 @@ class LlmInterface:
                 message = response.choices[0].message
                 if message and message.content is not None:
                     assistant_response_content = message.content
-                    self._message_history.append({"role": "assistant", "content": assistant_response_content})
+                    self.memory_strategy.add_message({"role": "assistant", "content": assistant_response_content})
                 else:
                     # Handle case where message or content is None/empty
                     print("Warning: Received response with missing message content.")
-                    self._message_history.append({"role": "assistant", "content": ""})
+                    self.memory_strategy.add_message({"role": "assistant", "content": ""})
             else:
                 # Handle case where response or choices are missing
                 print("Warning: Received an empty or invalid response from the API.")
                 # Append an empty assistant message to keep history consistent
-                self._message_history.append({"role": "assistant", "content": ""})
+                self.memory_strategy.add_message({"role": "assistant", "content": ""})
 
             return assistant_response_content
 
         except (APIError, RateLimitError, APIConnectionError) as e:
-            # Log the error or handle it more gracefully
             print(f"API Error: {e}")
-            # Remove the last user message if API call failed
-            self._message_history.pop()
+            self.memory_strategy.remove_last_message()
             raise
         except Exception as e:
-            # Log unexpected errors
             print(f"An unexpected error occurred: {e}")
-            # Remove the last user message if call failed
-            self._message_history.pop()
+            self.memory_strategy.remove_last_message()
             raise
 
     def get_message_history(self) -> List[Dict[str, str]]:
@@ -104,29 +108,27 @@ class LlmInterface:
         Returns:
             A list of message dictionaries.
         """
-        return self._message_history.copy()
+        return self.memory_strategy.get_messages()
 
     def clear_message_history(self):
         """
         Clears the message history.
-
-        Args:
-            keep_system_prompt: If True, retains the initial system prompt. Defaults to True.
+        If a system prompt was provided during initialization, it will be retained.
         """
-        self._message_history = []
-        if self.system_prompt:
-            self._message_history.append(self.system_prompt)
+        self.memory_strategy.clear_messages(system_prompt=self.system_prompt)
 
 
 if __name__ == "__main__":
     load_dotenv()
 
     try:
+        # Initialize the chat client with the memory strategy
         chat_client = LlmInterface(
             model=os.getenv("LLM_INTERFACE_MODEL"),
             api_key=os.getenv("LLM_INTERFACE_API_KEY"),
             base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-            system_prompt="You are a helpful assistant."
+            system_prompt="You are a helpful assistant.",
+            memory_strategy=InMemoryStrategy()
         )
 
         print(f"Chatting with {chat_client.model}. Type 'quit' to exit.")
@@ -140,11 +142,6 @@ if __name__ == "__main__":
 
         print("\nMessage History:")
         print(chat_client.get_message_history())
-
-        # Example of clearing history
-        # chat_client.clear_message_history()
-        # print("\nHistory cleared.")
-        # print(chat_client.get_message_history())
 
 
     except ValueError as ve:
