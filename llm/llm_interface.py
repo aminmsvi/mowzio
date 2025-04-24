@@ -1,8 +1,11 @@
 import os
+from typing import List, Dict
+
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
-from typing import List, Dict
-from memory_strategies import InMemoryStrategy, MemoryStrategy
+
+from .memory_strategies import InMemoryStrategy, MemoryStrategy
+
 
 class LlmInterface:
     """

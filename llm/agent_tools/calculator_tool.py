@@ -1,6 +1,8 @@
 import math
 from typing import Dict, Any
-from agent_tools.tool import Tool
+
+from .tool import Tool
+
 
 class CalculatorTool(Tool):
     """A tool for performing mathematical calculations."""

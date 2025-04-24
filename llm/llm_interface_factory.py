@@ -1,10 +1,12 @@
-from llm_interface import LlmInterface
-from memory_strategies import MemoryStrategy, InMemoryStrategy
+from .llm_interface import LlmInterface
+from .memory_strategies import MemoryStrategy, InMemoryStrategy
+
 
 class LlmInterfaceFactory:
     """
     Factory class for creating LlmInterface instances with pre-configured settings.
     """
+
     def __init__(
             self,
             model: str,
@@ -28,8 +30,8 @@ class LlmInterfaceFactory:
         self.memory_strategy = memory_strategy
 
     def create(
-        self,
-        system_prompt: str,
+            self,
+            system_prompt: str,
     ) -> LlmInterface:
         """
         Creates a new LlmInterface instance with a specific system prompt.

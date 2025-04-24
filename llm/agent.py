@@ -1,20 +1,23 @@
-import re
 import logging
+import re
 from typing import Dict, Any, List, Optional
-from llm_interface_factory import LlmInterfaceFactory
-from agent_tools import Tool, CalculatorTool, TimeTool
-from prompts.agent_system_prompt import BASE_AGENT_SYSTEM_PROMPT
+
+from .llm_interface_factory import LlmInterfaceFactory
+from .agent_tools import Tool, CalculatorTool, TimeTool
+from .prompts.agent_system_prompt import BASE_AGENT_SYSTEM_PROMPT
+
+
 class Agent:
     """
     An AI agent that can use various tools to accomplish tasks.
     """
 
-    def __init__(self, llm_interface_factory: LlmInterfaceFactory, tools: List[Tool], log_level=logging.INFO):
+    def __init__(self, interface_factory: LlmInterfaceFactory, tools: List[Tool], log_level=logging.INFO):
         """
         Initialize the agent with an LLM interface.
 
         Args:
-            llm_interface: The LLM interface to use for generating responses
+            interface_factory: The LLM interface factory to use for generating responses
             tools: A list of tools to use for the agent
             log_level: Logging level (default: logging.INFO)
         """
@@ -35,7 +38,7 @@ class Agent:
 
         # Set up the system prompt with tool usage instructions
         system_prompt = self._create_system_prompt(self.tools)
-        self.llm_interface = llm_interface_factory.create(system_prompt)
+        self.llm_interface = interface_factory.create(system_prompt)
         self.logger.info("Agent initialized successfully")
 
     def _create_system_prompt(self, tools: Dict[str, Tool]) -> str:
@@ -167,7 +170,7 @@ class Agent:
 if __name__ == "__main__":
     import os
     from dotenv import load_dotenv
-    from memory_strategies import InMemoryStrategy
+    from .memory_strategies import InMemoryStrategy
 
     load_dotenv()
 
@@ -180,7 +183,11 @@ if __name__ == "__main__":
     )
 
     # Initialize the agent with DEBUG level for more verbose logging
-    agent = Agent(llm_interface_factory, [CalculatorTool(), TimeTool()], log_level=logging.DEBUG)
+    agent = Agent(
+        interface_factory=llm_interface_factory,
+        tools=[CalculatorTool(), TimeTool()],
+        log_level=logging.DEBUG
+    )
 
     while True:
         user_input = input("You: ")

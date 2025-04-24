@@ -1,5 +1,7 @@
 import datetime
+
 from .tool import Tool
+
 
 class TimeTool(Tool):
     """A tool to get the current date and time."""

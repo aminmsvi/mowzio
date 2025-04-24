@@ -1,6 +1,7 @@
 import inspect
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
+
 
 class Tool(ABC):
     """Base class for all tools that can be used by the Agent."""
