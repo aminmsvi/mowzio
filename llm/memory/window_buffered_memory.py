@@ -1,6 +1,6 @@
-from typing import List, Dict, Optional
+from typing import List, Optional
 
-from .memory import Memory
+from .memory import Memory, Message
 
 
 class WindowBufferedMemory(Memory):
@@ -17,22 +17,22 @@ class WindowBufferedMemory(Memory):
         Args:
             window_size: Maximum number of non-system messages to retain.
         """
-        self._message_history: List[Dict[str, str]] = []
+        self._message_history: List[Message] = []
         self._window_size = window_size
 
-    def add_message(self, message: Dict[str, str]) -> None:
+    def add_message(self, message: Message) -> None:
         """
         Add a message to the in-memory history, maintaining the window size limit.
         System prompts are always preserved regardless of window size.
 
         Args:
-            message: A dictionary containing the message with 'role' and 'content' keys.
+            message: A Message object containing the role and content.
         """
         self._message_history.append(message)
 
         # Count system messages to exclude them from the window limit
         system_messages = [
-            m for m in self._message_history if m.get("role") == "system"
+            m for m in self._message_history if m.role == "system"
         ]
         non_system_count = len(self._message_history) - len(system_messages)
 
@@ -40,21 +40,21 @@ class WindowBufferedMemory(Memory):
         while non_system_count > self._window_size:
             # Find the first non-system message to remove
             for i, msg in enumerate(self._message_history):
-                if msg.get("role") != "system":
+                if msg.role != "system":
                     self._message_history.pop(i)
                     non_system_count -= 1
                     break
 
-    def get_messages(self) -> List[Dict[str, str]]:
+    def get_messages(self) -> List[Message]:
         """
         Retrieve all messages from the in-memory history.
 
         Returns:
-            A list of message dictionaries.
+            A list of Message objects.
         """
         return self._message_history.copy()
 
-    def clear_messages(self, system_prompt: Optional[Dict[str, str]] = None) -> None:
+    def clear_messages(self, system_prompt: Optional[Message] = None) -> None:
         """
         Clear all messages from the in-memory history, optionally preserving a system prompt.
 
@@ -71,5 +71,5 @@ class WindowBufferedMemory(Memory):
         """
         if self._message_history:  # Check if the list is not empty
             # Check if the last message's role is not 'system' before removing
-            if self._message_history[-1].get("role") != "system":
+            if self._message_history[-1].role != "system":
                 self._message_history.pop()

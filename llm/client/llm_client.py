@@ -1,10 +1,10 @@
 import os
-from typing import List, Dict
+from typing import List
 
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
-from llm.memory import WindowBufferedMemory, Memory
+from llm.memory import WindowBufferedMemory, Memory, Message
 
 
 class LlmClient:
@@ -34,7 +34,7 @@ class LlmClient:
         self.model = model
         self.base_url = base_url
         self.system_prompt_text = system_prompt
-        self.system_prompt = {"role": "system", "content": system_prompt}
+        self.system_prompt = Message(role="system", content=system_prompt)
         self.temperature = temperature
 
         self.client = OpenAI(
@@ -64,15 +64,17 @@ class LlmClient:
             APIConnectionError: If there's an issue connecting to the API.
             Exception: For other unexpected errors.
         """
-        user_msg_dict = {"role": "user", "content": user_message}
-        self.memory.add_message(user_msg_dict)
+        user_msg = Message(role="user", content=user_message)
+        self.memory.add_message(user_msg)
 
         assistant_response_content = ""
 
         try:
+            # Convert Message objects to dictionaries for the API
+            messages_dict = [msg.to_dict() for msg in self.memory.get_messages()]
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=self.memory.get_messages(),
+                messages=messages_dict,
                 temperature=self.temperature,
             )
 
@@ -83,17 +85,17 @@ class LlmClient:
                 if message and message.content is not None:
                     assistant_response_content = message.content
                     self.memory.add_message(
-                        {"role": "assistant", "content": assistant_response_content}
+                        Message(role="assistant", content=assistant_response_content)
                     )
                 else:
                     # Handle case where message or content is None/empty
                     print("Warning: Received response with missing message content.")
-                    self.memory.add_message({"role": "assistant", "content": ""})
+                    self.memory.add_message(Message(role="assistant", content=""))
             else:
                 # Handle case where response or choices are missing
                 print("Warning: Received an empty or invalid response from the API.")
                 # Append an empty assistant message to keep history consistent
-                self.memory.add_message({"role": "assistant", "content": ""})
+                self.memory.add_message(Message(role="assistant", content=""))
 
             return assistant_response_content
 
@@ -106,12 +108,12 @@ class LlmClient:
             self.memory.remove_last_message()
             raise
 
-    def get_message_history(self) -> List[Dict[str, str]]:
+    def get_message_history(self) -> List[Message]:
         """
         Returns the current message history.
 
         Returns:
-            A list of message dictionaries.
+            A list of Message objects.
         """
         return self.memory.get_messages()
 
@@ -146,7 +148,8 @@ if __name__ == "__main__":
             print(f"Assistant: {response_content}")
 
         print("\nMessage History:")
-        print(chat_client.get_message_history())
+        for msg in chat_client.get_message_history():
+            print(f"{msg.role}: {msg.content}")
 
     except ValueError as ve:
         print(f"Configuration Error: {ve}")
