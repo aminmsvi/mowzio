@@ -26,7 +26,6 @@ class Agent:
         Args:
             client_factory: The LLM client factory to use for generating responses
             tools: A list of tools to use for the agent
-            log_level: Logging level (default: logging.INFO)
         """
         # Configure logging
         self.logger = logging.getLogger(__name__)

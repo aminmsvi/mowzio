@@ -42,7 +42,7 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
     )
 
     tools = [CalculatorTool(), TimeTool()]
-    agent = Agent(client_factory=client_factory, tools=tools, log_level=logging.DEBUG)
+    agent = Agent(client_factory=client_factory, tools=tools)
     response = agent.process(update.message.text)
     await update.message.reply_text(response)
 
