@@ -2,9 +2,9 @@ import logging
 import re
 from typing import Dict, Any, List, Optional
 
-from .llm_interface_factory import LlmInterfaceFactory
-from .tools import Tool, CalculatorTool, TimeTool
+from .client.llm_client_factory import LlmClientFactory
 from .prompts.agent_system_prompt import BASE_AGENT_SYSTEM_PROMPT
+from .tools import Tool, CalculatorTool, TimeTool
 
 
 class Agent:
@@ -12,12 +12,17 @@ class Agent:
     An AI agent that can use various tools to accomplish tasks.
     """
 
-    def __init__(self, interface_factory: LlmInterfaceFactory, tools: List[Tool], log_level=logging.INFO):
+    def __init__(
+            self,
+            client_factory: LlmClientFactory,
+            tools: List[Tool],
+            log_level=logging.INFO
+    ):
         """
-        Initialize the agent with an LLM interface.
+        Initialize the agent with an LLM client.
 
         Args:
-            interface_factory: The LLM interface factory to use for generating responses
+            client_factory: The LLM client factory to use for generating responses
             tools: A list of tools to use for the agent
             log_level: Logging level (default: logging.INFO)
         """
@@ -38,7 +43,7 @@ class Agent:
 
         # Set up the system prompt with tool usage instructions
         system_prompt = self._create_system_prompt(self.tools)
-        self.llm_interface = interface_factory.create(system_prompt)
+        self.llm_client = client_factory.create(system_prompt)
         self.logger.info("Agent initialized successfully")
 
     def _create_system_prompt(self, tools: Dict[str, Tool]) -> str:
@@ -143,7 +148,7 @@ class Agent:
         self.logger.debug(f"User message: {user_message}")
 
         # Get the LLM's initial response
-        llm_response = self.llm_interface.chat(user_message)
+        llm_response = self.llm_client.chat(user_message)
         self.logger.debug(f"Initial LLM response: {llm_response}")
 
         # Check if the response contains a tool call
@@ -162,7 +167,7 @@ class Agent:
         result_message = f"Tool '{tool_name}' returned: {tool_result}"
         self.logger.debug(f"Sending tool result to LLM: {result_message}")
 
-        final_response = self.llm_interface.chat(result_message)
+        final_response = self.llm_client.chat(result_message)
         self.logger.debug(f"Final LLM response: {final_response}")
         return final_response
 
@@ -174,17 +179,17 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    # Initialize the LLM interface
-    llm_interface_factory = LlmInterfaceFactory(
+    # Initialize the LLM client
+    llm_client_factory = LlmClientFactory(
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-        memory_strategy=WindowBufferedMemory()
+        memory=WindowBufferedMemory()
     )
 
     # Initialize the agent with DEBUG level for more verbose logging
     agent = Agent(
-        interface_factory=llm_interface_factory,
+        client_factory=llm_client_factory,
         tools=[CalculatorTool(), TimeTool()],
         log_level=logging.DEBUG
     )

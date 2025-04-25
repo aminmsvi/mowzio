@@ -4,12 +4,12 @@ from typing import List, Dict
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
-from .memory import WindowBufferedMemory, Memory
+from llm.memory import WindowBufferedMemory, Memory
 
 
-class LlmInterface:
+class LlmClient:
     """
-    A class to interact with OpenRouter models using the OpenAI Python library.
+    A class to interact with LLM models using the OpenAI Python library.
     """
     def __init__(
         self,
@@ -17,19 +17,18 @@ class LlmInterface:
         api_key: str,
         base_url: str,
         system_prompt: str = "You are a helpful assistant.",
-        memory_strategy: Memory = WindowBufferedMemory(),
+        memory: Memory = WindowBufferedMemory(),
         temperature: float = 0.1,
     ):
         """
-        Initializes the OpenRouterChat client.
+        Initializes the LLM client.
 
         Args:
-            model: The name of the OpenRouter model to use (e.g., "openai/gpt-3.5-turbo").
-            api_key: Your OpenRouter API key. Defaults to the OPENROUTER_API_KEY environment variable.
-            base_url: The base URL for the OpenRouter API.
+            model: The name of the LLM model to use (e.g., "openai/gpt-3.5-turbo").
+            api_key: Your LLM API key. Defaults to the LLM_API_KEY environment variable.
+            base_url: The base URL for the LLM API.
             system_prompt: The initial system prompt to set the context for the model.
-            memory_strategy: The strategy to use for storing and retrieving message history.
-                            If None, defaults to InMemoryStrategy.
+            memory: The strategy to use for storing and retrieving message history.
         """
         self.model = model
         self.base_url = base_url
@@ -37,19 +36,16 @@ class LlmInterface:
         self.system_prompt = {"role": "system", "content": system_prompt}
         self.temperature = temperature
 
-        if not api_key:
-            raise ValueError("API key must be provided either as an argument or via OPENROUTER_API_KEY environment variable.")
-
         self.client = OpenAI(
             base_url=self.base_url,
             api_key=api_key,
         )
 
-        self.memory_strategy = memory_strategy
+        self.memory = memory
 
         # Initialize message history with system prompt if one exists
         if self.system_prompt:
-            self.memory_strategy.add_message(self.system_prompt)
+            self.memory.add_message(self.system_prompt)
 
     def chat(self, user_message: str) -> str:
         """
@@ -68,14 +64,14 @@ class LlmInterface:
             Exception: For other unexpected errors.
         """
         user_msg_dict = {"role": "user", "content": user_message}
-        self.memory_strategy.add_message(user_msg_dict)
+        self.memory.add_message(user_msg_dict)
 
         assistant_response_content = ""
 
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=self.memory_strategy.get_messages(),
+                messages=self.memory.get_messages(),
                 temperature=self.temperature,
             )
 
@@ -85,26 +81,26 @@ class LlmInterface:
                 message = response.choices[0].message
                 if message and message.content is not None:
                     assistant_response_content = message.content
-                    self.memory_strategy.add_message({"role": "assistant", "content": assistant_response_content})
+                    self.memory.add_message({"role": "assistant", "content": assistant_response_content})
                 else:
                     # Handle case where message or content is None/empty
                     print("Warning: Received response with missing message content.")
-                    self.memory_strategy.add_message({"role": "assistant", "content": ""})
+                    self.memory.add_message({"role": "assistant", "content": ""})
             else:
                 # Handle case where response or choices are missing
                 print("Warning: Received an empty or invalid response from the API.")
                 # Append an empty assistant message to keep history consistent
-                self.memory_strategy.add_message({"role": "assistant", "content": ""})
+                self.memory.add_message({"role": "assistant", "content": ""})
 
             return assistant_response_content
 
         except (APIError, RateLimitError, APIConnectionError) as e:
             print(f"API Error: {e}")
-            self.memory_strategy.remove_last_message()
+            self.memory.remove_last_message()
             raise
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
-            self.memory_strategy.remove_last_message()
+            self.memory.remove_last_message()
             raise
 
     def get_message_history(self) -> List[Dict[str, str]]:
@@ -114,14 +110,14 @@ class LlmInterface:
         Returns:
             A list of message dictionaries.
         """
-        return self.memory_strategy.get_messages()
+        return self.memory.get_messages()
 
     def clear_message_history(self):
         """
         Clears the message history.
         If a system prompt was provided during initialization, it will be retained.
         """
-        self.memory_strategy.clear_messages(system_prompt=self.system_prompt)
+        self.memory.clear_messages(system_prompt=self.system_prompt)
 
 
 if __name__ == "__main__":
@@ -129,12 +125,12 @@ if __name__ == "__main__":
 
     try:
         # Initialize the chat client with the memory strategy
-        chat_client = LlmInterface(
+        chat_client = LlmClient(
             model=os.getenv("LLM_INTERFACE_MODEL"),
             api_key=os.getenv("LLM_INTERFACE_API_KEY"),
             base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
             system_prompt="You are a helpful assistant.",
-            memory_strategy=WindowBufferedMemory()
+            memory=WindowBufferedMemory()
         )
 
         print(f"Chatting with {chat_client.model}. Type 'quit' to exit.")

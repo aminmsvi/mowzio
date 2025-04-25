@@ -1,10 +1,10 @@
-from .llm_interface import LlmInterface
-from .memory import Memory, WindowBufferedMemory
+from .llm_client import LlmClient
+from llm.memory import Memory, WindowBufferedMemory
 
 
-class LlmInterfaceFactory:
+class LlmClientFactory:
     """
-    Factory class for creating LlmInterface instances with pre-configured settings.
+    Factory class for creating LlmClient instances with pre-configured settings.
     """
 
     def __init__(
@@ -15,7 +15,7 @@ class LlmInterfaceFactory:
             memory_strategy: Memory = WindowBufferedMemory()
     ):
         """
-        Initializes the factory with common LLM interface parameters.
+        Initializes the factory with common LLM client parameters.
 
         Args:
             model: The name of the LLM model to use (e.g., "openai/gpt-3.5-turbo").
@@ -32,27 +32,27 @@ class LlmInterfaceFactory:
     def create(
             self,
             system_prompt: str,
-    ) -> LlmInterface:
+    ) -> LlmClient:
         """
-        Creates a new LlmInterface instance with a specific system prompt.
+        Creates a new LlmClient instance with a specific system prompt.
 
         Args:
             system_prompt: The initial system prompt to set the context for the model.
                            Defaults to "You are a helpful assistant.".
 
         Returns:
-            A configured LlmInterface instance.
+            A configured LlmClient instance.
 
         Raises:
-            ValueError: If the API key is missing during LlmInterface initialization
-                        (though checked in __init__, LlmInterface might re-check).
+            ValueError: If the API key is missing during LlmClient initialization
+                        (though checked in __init__, LlmClient might re-check).
         """
 
-        # Create and return the LlmInterface instance
-        return LlmInterface(
+        # Create and return the LlmClient instance
+        return LlmClient(
             model=self.model,
             api_key=self.api_key,
             base_url=self.base_url,
             system_prompt=system_prompt,
-            memory_strategy=self.memory_strategy,
+            memory=self.memory_strategy,
         )

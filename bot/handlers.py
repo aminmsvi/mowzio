@@ -3,7 +3,8 @@ import os
 
 from bot.decorators import authorized
 from bot.ptb import ptb
-from llm import LlmInterfaceFactory, Agent
+from llm.agent import Agent
+from llm.client import LlmClientFactory
 from llm.memory import WindowBufferedMemory
 from llm.tools import CalculatorTool, TimeTool
 from telegram import Update
@@ -23,7 +24,7 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
     logger = logging.getLogger(__name__)
     logger.info(f"Received message: {update.message.text}")
 
-    llm_interface_factory = LlmInterfaceFactory(
+    client_factory = LlmClientFactory(
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
@@ -32,7 +33,7 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
 
     tools = [CalculatorTool(), TimeTool()]
     agent = Agent(
-        interface_factory=llm_interface_factory,
+        client_factory=client_factory,
         tools=tools,
         log_level=logging.DEBUG
     )
