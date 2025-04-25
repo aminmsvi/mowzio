@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import json
 from typing import List, Optional, Literal
 from dataclasses import dataclass
 
@@ -20,6 +21,15 @@ class Message:
     def from_dict(cls, message_dict: dict) -> "Message":
         """Create a Message from a dictionary."""
         return cls(role=message_dict["role"], content=message_dict["content"])
+
+    @classmethod
+    def from_json(cls, message_json: str) -> "Message":
+        """Create a Message from a JSON string."""
+        return cls.from_dict(json.loads(message_json))
+
+    def to_json(self) -> str:
+        """Convert the message to a JSON string."""
+        return json.dumps(self.to_dict())
 
 
 class Memory(ABC):
