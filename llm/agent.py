@@ -3,7 +3,7 @@ import re
 from typing import Dict, Any, List, Optional
 
 from .client.llm_client_factory import LlmClientFactory
-from .prompts.agent_system_prompt import BASE_AGENT_SYSTEM_PROMPT
+from .prompts.agent_system_prompt import AGENT_SYSTEM_PROMPT
 from .tools import Tool, CalculatorTool, TimeTool
 
 
@@ -62,7 +62,7 @@ class Agent:
                 }
             )
 
-        system_prompt = BASE_AGENT_SYSTEM_PROMPT
+        system_prompt = AGENT_SYSTEM_PROMPT
 
         # Add tool descriptions to system prompt
         for tool_json in tools_json:
