@@ -19,7 +19,6 @@ class Agent:
         self,
         client_factory: LlmClientFactory,
         tools: List[Tool],
-        log_level=logging.INFO,
     ):
         """
         Initialize the agent with an LLM client.
@@ -31,16 +30,7 @@ class Agent:
         """
         # Configure logging
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
-
-        if not self.logger.handlers:
-            # Add handler if none exists
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+        self.logger.setLevel(logging.DEBUG)
 
         self.logger.info("Initializing Agent")
         self.tools: Dict[str, Tool] = {tool.name: tool for tool in tools}
@@ -202,7 +192,6 @@ if __name__ == "__main__":
     agent = Agent(
         client_factory=llm_client_factory,
         tools=[CalculatorTool(), TimeTool()],
-        log_level=logging.DEBUG,
     )
 
     while True:
