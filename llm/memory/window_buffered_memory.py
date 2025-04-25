@@ -34,6 +34,8 @@ class WindowBufferedMemory(Memory):
         Args:
             message: A Message object containing the role and content.
         """
+        # TODO summerize the old messages and add it to the Redis list to preserve old memories
+
         # Serialize the message and add it to the Redis list
         self._redis.rpush(self._messages_key, message.to_json())
 

@@ -20,6 +20,14 @@ async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
 
 
 @authorized
+async def amnesia(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    """Handler for the /amnesia command."""
+    memory = WindowBufferedMemory()
+    memory.clear_messages()
+    await update.message.reply_text("💭 Zzzzzap! All gone. I feel… strangely empty.")
+
+
+@authorized
 async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Handler for incoming messages."""
 
@@ -42,4 +50,5 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
 # Add handlers to the application
 def register_handlers():
     ptb.add_handler(CommandHandler("start", start))
+    ptb.add_handler(CommandHandler("amnesia", amnesia))
     ptb.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
