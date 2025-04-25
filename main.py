@@ -6,6 +6,7 @@ from app.api.routes import router as api_router
 from bot.ptb import ptb
 from bot.handlers import register_handlers
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Manage the lifespan of the application, setting the webhook and starting/stopping the bot."""
@@ -15,6 +16,7 @@ async def lifespan(_: FastAPI):
         await ptb.start()
         yield
         await ptb.stop()
+
 
 # Initialize FastAPI app
 app = FastAPI(lifespan=lifespan, title="Mowzio Bot")
