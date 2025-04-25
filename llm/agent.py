@@ -170,7 +170,7 @@ class Agent:
 if __name__ == "__main__":
     import os
     from dotenv import load_dotenv
-    from .memory_strategies import InMemoryStrategy
+    from .memory import WindowBufferedMemory
 
     load_dotenv()
 
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-        memory_strategy=InMemoryStrategy()
+        memory_strategy=WindowBufferedMemory()
     )
 
     # Initialize the agent with DEBUG level for more verbose logging

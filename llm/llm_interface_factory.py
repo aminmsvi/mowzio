@@ -1,5 +1,5 @@
 from .llm_interface import LlmInterface
-from .memory_strategies import MemoryStrategy, InMemoryStrategy
+from .memory import Memory, WindowBufferedMemory
 
 
 class LlmInterfaceFactory:
@@ -12,7 +12,7 @@ class LlmInterfaceFactory:
             model: str,
             api_key: str,
             base_url: str,
-            memory_strategy: MemoryStrategy = InMemoryStrategy()
+            memory_strategy: Memory = WindowBufferedMemory()
     ):
         """
         Initializes the factory with common LLM interface parameters.

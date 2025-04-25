@@ -4,7 +4,7 @@ from typing import List, Dict
 from dotenv import load_dotenv
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
-from .memory_strategies import InMemoryStrategy, MemoryStrategy
+from .memory import WindowBufferedMemory, Memory
 
 
 class LlmInterface:
@@ -17,7 +17,7 @@ class LlmInterface:
         api_key: str,
         base_url: str,
         system_prompt: str = "You are a helpful assistant.",
-        memory_strategy: MemoryStrategy = InMemoryStrategy(),
+        memory_strategy: Memory = WindowBufferedMemory(),
         temperature: float = 0.1,
     ):
         """
@@ -134,7 +134,7 @@ if __name__ == "__main__":
             api_key=os.getenv("LLM_INTERFACE_API_KEY"),
             base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
             system_prompt="You are a helpful assistant.",
-            memory_strategy=InMemoryStrategy()
+            memory_strategy=WindowBufferedMemory()
         )
 
         print(f"Chatting with {chat_client.model}. Type 'quit' to exit.")

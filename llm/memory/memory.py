@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 
 
-class MemoryStrategy(ABC):
+class Memory(ABC):
     """
     Abstract base class defining the interface for different message history storage strategies.
     This follows the Strategy pattern to allow different implementations for storing chat history.

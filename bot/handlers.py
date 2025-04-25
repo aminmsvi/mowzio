@@ -6,7 +6,8 @@ from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
 
 from bot.decorators import authorized
 from bot.ptb import ptb
-from llm import LlmInterfaceFactory, InMemoryStrategy, CalculatorTool, TimeTool, Agent
+from llm import LlmInterfaceFactory, CalculatorTool, TimeTool, Agent
+from llm.memory import WindowBufferedMemory
 
 
 @authorized
@@ -26,7 +27,7 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-        memory_strategy=InMemoryStrategy()
+        memory_strategy=WindowBufferedMemory()
     )
 
     tools = [CalculatorTool(), TimeTool()]

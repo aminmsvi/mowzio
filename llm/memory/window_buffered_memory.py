@@ -1,11 +1,11 @@
 from typing import List, Dict, Optional
 
-from .memory_strategy import MemoryStrategy
+from .memory import Memory
 
 
-class InMemoryStrategy(MemoryStrategy):
+class WindowBufferedMemory(Memory):
     """
-    In-memory implementation of the MemoryStrategy interface.
+    In-memory implementation of the Memory interface.
     Stores message history in a simple list in memory.
     """
 
