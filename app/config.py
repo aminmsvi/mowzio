@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     TELEGRAM_WEBHOOK_URL: str
     TELEGRAM_AUTHORIZED_USERNAME: str
 
+    LLM_CLIENT_MODEL: str
+    LLM_CLIENT_API_KEY: str
+    LLM_CLIENT_BASE_URL: str
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )

@@ -1,8 +1,8 @@
 import logging
-import os
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
 
+from app.config import settings
 from bot.decorators import authorized
 from bot.ptb import ptb
 from llm.agent import Agent
@@ -27,9 +27,9 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Received message: {update.message.text}")
 
     client_factory = LlmClientFactory(
-        model=os.getenv("LLM_INTERFACE_MODEL"),
-        api_key=os.getenv("LLM_INTERFACE_API_KEY"),
-        base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
+        model=settings.LLM_CLIENT_MODEL,
+        api_key=settings.LLM_CLIENT_API_KEY,
+        base_url=settings.LLM_CLIENT_BASE_URL,
         memory=WindowBufferedMemory(),
     )
 

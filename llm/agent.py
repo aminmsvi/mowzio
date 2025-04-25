@@ -184,17 +184,17 @@ class Agent:
 
 
 if __name__ == "__main__":
-    import os
     from dotenv import load_dotenv
     from .memory import WindowBufferedMemory
+    from app.config import settings
 
     load_dotenv()
 
     # Initialize the LLM client
     llm_client_factory = LlmClientFactory(
-        model=os.getenv("LLM_INTERFACE_MODEL"),
-        api_key=os.getenv("LLM_INTERFACE_API_KEY"),
-        base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
+        model=settings.LLM_CLIENT_MODEL,
+        api_key=settings.LLM_CLIENT_API_KEY,
+        base_url=settings.LLM_CLIENT_BASE_URL,
         memory=WindowBufferedMemory(),
     )
 

@@ -1,7 +1,4 @@
-import os
 from typing import List
-
-from dotenv import load_dotenv
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
 from llm.memory import WindowBufferedMemory, Memory, Message
@@ -126,14 +123,14 @@ class LlmClient:
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    from app.config import settings
 
     try:
         # Initialize the chat client with the memory strategy
         chat_client = LlmClient(
-            model=os.getenv("LLM_INTERFACE_MODEL"),
-            api_key=os.getenv("LLM_INTERFACE_API_KEY"),
-            base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
+            model=settings.LLM_CLIENT_MODEL,
+            api_key=settings.LLM_CLIENT_API_KEY,
+            base_url=settings.LLM_CLIENT_BASE_URL,
             system_prompt="You are a helpful assistant.",
             memory=WindowBufferedMemory(),
         )
