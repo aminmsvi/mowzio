@@ -31,7 +31,9 @@ class WindowBufferedMemory(Memory):
         self._message_history.append(message)
 
         # Count system messages to exclude them from the window limit
-        system_messages = [m for m in self._message_history if m.get("role") == "system"]
+        system_messages = [
+            m for m in self._message_history if m.get("role") == "system"
+        ]
         non_system_count = len(self._message_history) - len(system_messages)
 
         # Remove oldest non-system messages if we exceed the window size

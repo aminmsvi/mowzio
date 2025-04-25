@@ -1,5 +1,7 @@
 import logging
 import os
+from telegram import Update
+from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
 
 from bot.decorators import authorized
 from bot.ptb import ptb
@@ -7,8 +9,6 @@ from llm.agent import Agent
 from llm.client import LlmClientFactory
 from llm.memory import WindowBufferedMemory
 from llm.tools import CalculatorTool, TimeTool
-from telegram import Update
-from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
 
 
 @authorized
@@ -28,7 +28,7 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-        memory_strategy=WindowBufferedMemory(),
+        memory=WindowBufferedMemory(),
     )
 
     tools = [CalculatorTool(), TimeTool()]

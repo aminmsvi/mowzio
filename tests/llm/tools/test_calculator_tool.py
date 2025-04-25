@@ -11,7 +11,10 @@ def calculator_tool():
 
 def test_calculator_tool_properties(calculator_tool):
     assert calculator_tool.name == "calculator"
-    assert calculator_tool.description == "Evaluates mathematical expressions. Use this for calculations."
+    assert (
+        calculator_tool.description
+        == "Evaluates mathematical expressions. Use this for calculations."
+    )
     assert "expression" in calculator_tool.parameters
 
 
@@ -58,10 +61,15 @@ def test_calculator_tool_unsafe_expression(calculator_tool):
     assert "Error evaluating expression" in result_eval
     assert "not defined" in result_eval
 
+
 def test_calculator_tool_division_by_zero(calculator_tool):
     result = calculator_tool.execute("1 / 0")
     assert "Error evaluating expression: division by zero" in result
 
+
 def test_calculator_tool_syntax_error(calculator_tool):
     result = calculator_tool.execute("2 +")
-    assert "Error evaluating expression: unexpected EOF while parsing" in result or "Error evaluating expression: invalid syntax" in result # Python version differences
+    assert (
+        "Error evaluating expression: unexpected EOF while parsing" in result
+        or "Error evaluating expression: invalid syntax" in result
+    )  # Python version differences

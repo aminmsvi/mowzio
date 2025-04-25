@@ -63,7 +63,7 @@ def test_get_messages_returns_copy():
     memory.add_message(msg1)
     messages_copy = memory.get_messages()
     messages_copy.append({"role": "user", "content": "Modified"})
-    assert memory.get_messages() == [msg1] # Original should be unchanged
+    assert memory.get_messages() == [msg1]  # Original should be unchanged
 
 
 def test_clear_messages():
@@ -103,13 +103,13 @@ def test_remove_last_message_when_system():
     user_msg = {"role": "user", "content": "User message"}
 
     memory.add_message(system_msg)
-    memory.remove_last_message() # Try removing system msg
+    memory.remove_last_message()  # Try removing system msg
     assert memory.get_messages() == [system_msg]
 
     memory.add_message(user_msg)
-    memory.remove_last_message() # Remove user msg
+    memory.remove_last_message()  # Remove user msg
     assert memory.get_messages() == [system_msg]
-    memory.remove_last_message() # Try removing system msg again
+    memory.remove_last_message()  # Try removing system msg again
     assert memory.get_messages() == [system_msg]
 
 

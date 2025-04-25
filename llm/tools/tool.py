@@ -10,13 +10,11 @@ class Tool(ABC):
     @abstractmethod
     def name(self) -> str:
         """The name of the tool."""
-        pass
 
     @property
     @abstractmethod
     def description(self) -> str:
         """A description of what the tool does."""
-        pass
 
     @property
     def parameters(self) -> Dict[str, Dict[str, Any]]:
@@ -34,4 +32,3 @@ class Tool(ABC):
     @abstractmethod
     def execute(self, **kwargs) -> str:
         """Execute the tool with the given parameters."""
-        pass

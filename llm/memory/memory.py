@@ -16,7 +16,6 @@ class Memory(ABC):
         Args:
             message: A dictionary containing the message with 'role' and 'content' keys.
         """
-        pass
 
     @abstractmethod
     def get_messages(self) -> List[Dict[str, str]]:
@@ -26,7 +25,6 @@ class Memory(ABC):
         Returns:
             A list of message dictionaries.
         """
-        pass
 
     @abstractmethod
     def clear_messages(self, system_prompt: Optional[Dict[str, str]] = None) -> None:
@@ -36,11 +34,9 @@ class Memory(ABC):
         Args:
             system_prompt: Optional system prompt to retain after clearing.
         """
-        pass
 
     @abstractmethod
     def remove_last_message(self) -> None:
         """
         Remove the last message from the history if it is not the system prompt.
         """
-        pass

@@ -27,9 +27,11 @@ def test_time_tool_execute(time_tool):
     fixed_datetime_tehran = fixed_datetime.replace(tzinfo=tehran_tz)
 
     # Mock datetime.datetime.now() to return the fixed time
-    with patch('llm.tools.time_tool.datetime') as mock_datetime:
+    with patch("llm.tools.time_tool.datetime") as mock_datetime:
         mock_datetime.datetime.now.return_value = fixed_datetime_tehran
-        mock_datetime.datetime.side_effect = lambda *args, **kw: datetime.datetime(*args, **kw)
+        mock_datetime.datetime.side_effect = lambda *args, **kw: datetime.datetime(
+            *args, **kw
+        )
 
         # Execute the tool
         result = time_tool.execute()

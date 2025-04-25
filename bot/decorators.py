@@ -14,11 +14,9 @@ def authorized(handler):
         user = update.effective_user
         if user and user.username == settings.TELEGRAM_AUTHORIZED_USERNAME:
             return await handler(update, context, *args, **kwargs)
-        else:
-            if update.message:
-                await update.message.reply_text(
-                    "You are not authorized to use this bot."
-                )
+
+        if update.message:
+            await update.message.reply_text("You are not authorized to use this bot.")
             return None
 
     return wrapper

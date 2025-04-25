@@ -1,5 +1,5 @@
-from .llm_client import LlmClient
 from llm.memory import Memory, WindowBufferedMemory
+from .llm_client import LlmClient
 
 
 class LlmClientFactory:
@@ -12,7 +12,7 @@ class LlmClientFactory:
         model: str,
         api_key: str,
         base_url: str,
-        memory_strategy: Memory = WindowBufferedMemory(),
+        memory: Memory = WindowBufferedMemory(),
     ):
         """
         Initializes the factory with common LLM client parameters.
@@ -27,7 +27,7 @@ class LlmClientFactory:
         self.model = model
         self.api_key = api_key
         self.base_url = base_url
-        self.memory_strategy = memory_strategy
+        self.memory_strategy = memory
 
     def create(
         self,
