@@ -20,7 +20,7 @@ class CalculatorTool(Tool):
         return {
             "expression": {
                 "type": "string",
-                "description": "The mathematical expression to evaluate"
+                "description": "The mathematical expression to evaluate",
             }
         }
 
@@ -37,12 +37,22 @@ class CalculatorTool(Tool):
         """
         # Define safe functions
         safe_dict = {
-            'abs': abs, 'round': round,
-            'max': max, 'min': min,
-            'sin': math.sin, 'cos': math.cos, 'tan': math.tan,
-            'asin': math.asin, 'acos': math.acos, 'atan': math.atan,
-            'sqrt': math.sqrt, 'log': math.log, 'log10': math.log10,
-            'exp': math.exp, 'pi': math.pi, 'e': math.e
+            "abs": abs,
+            "round": round,
+            "max": max,
+            "min": min,
+            "sin": math.sin,
+            "cos": math.cos,
+            "tan": math.tan,
+            "asin": math.asin,
+            "acos": math.acos,
+            "atan": math.atan,
+            "sqrt": math.sqrt,
+            "log": math.log,
+            "log10": math.log10,
+            "exp": math.exp,
+            "pi": math.pi,
+            "e": math.e,
         }
 
         try:

@@ -11,6 +11,7 @@ class LlmClient:
     """
     A class to interact with LLM models using the OpenAI Python library.
     """
+
     def __init__(
         self,
         model: str,
@@ -81,7 +82,9 @@ class LlmClient:
                 message = response.choices[0].message
                 if message and message.content is not None:
                     assistant_response_content = message.content
-                    self.memory.add_message({"role": "assistant", "content": assistant_response_content})
+                    self.memory.add_message(
+                        {"role": "assistant", "content": assistant_response_content}
+                    )
                 else:
                     # Handle case where message or content is None/empty
                     print("Warning: Received response with missing message content.")
@@ -130,13 +133,13 @@ if __name__ == "__main__":
             api_key=os.getenv("LLM_INTERFACE_API_KEY"),
             base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
             system_prompt="You are a helpful assistant.",
-            memory=WindowBufferedMemory()
+            memory=WindowBufferedMemory(),
         )
 
         print(f"Chatting with {chat_client.model}. Type 'quit' to exit.")
         while True:
             user_input = input("You: ")
-            if user_input.lower() == 'quit':
+            if user_input.lower() == "quit":
                 break
 
             response_content = chat_client.chat(user_input)
@@ -144,7 +147,6 @@ if __name__ == "__main__":
 
         print("\nMessage History:")
         print(chat_client.get_message_history())
-
 
     except ValueError as ve:
         print(f"Configuration Error: {ve}")

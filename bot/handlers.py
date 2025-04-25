@@ -28,15 +28,11 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-        memory_strategy=WindowBufferedMemory()
+        memory_strategy=WindowBufferedMemory(),
     )
 
     tools = [CalculatorTool(), TimeTool()]
-    agent = Agent(
-        client_factory=client_factory,
-        tools=tools,
-        log_level=logging.DEBUG
-    )
+    agent = Agent(client_factory=client_factory, tools=tools, log_level=logging.DEBUG)
     response = agent.process(update.message.text)
     await update.message.reply_text(response)
 

@@ -13,10 +13,10 @@ class Agent:
     """
 
     def __init__(
-            self,
-            client_factory: LlmClientFactory,
-            tools: List[Tool],
-            log_level=logging.INFO
+        self,
+        client_factory: LlmClientFactory,
+        tools: List[Tool],
+        log_level=logging.INFO,
     ):
         """
         Initialize the agent with an LLM client.
@@ -33,7 +33,9 @@ class Agent:
         if not self.logger.handlers:
             # Add handler if none exists
             handler = logging.StreamHandler()
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
 
@@ -52,11 +54,13 @@ class Agent:
         tools_json = []
 
         for tool in tools.values():
-            tools_json.append({
-                "name": tool.name,
-                "description": tool.description,
-                "parameters": tool.parameters
-            })
+            tools_json.append(
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.parameters,
+                }
+            )
 
         system_prompt = BASE_AGENT_SYSTEM_PROMPT
 
@@ -64,7 +68,7 @@ class Agent:
         for tool_json in tools_json:
             system_prompt += f"\n- {tool_json['name']}: {tool_json['description']}"
             system_prompt += "\n  Parameters:"
-            for param_name, param_details in tool_json['parameters'].items():
+            for param_name, param_details in tool_json["parameters"].items():
                 system_prompt += f"\n  - {param_name}: {param_details['description']}"
 
         # If no tools are available, add a note
@@ -87,17 +91,18 @@ class Agent:
         """
         self.logger.debug("Parsing tool call from response")
         # Look for a tool call in the format ```tool {...} ```
-        tool_pattern = r'```tool\s*\n(.*?)\n```'
+        tool_pattern = r"```tool\s*\n(.*?)\n```"
         match = re.search(tool_pattern, text, re.DOTALL)
 
         if match:
             try:
                 import json
+
                 tool_json = json.loads(match.group(1))
                 self.logger.info(f"Tool call detected: {tool_json.get('name')}")
                 return {
                     "name": tool_json.get("name"),
-                    "parameters": tool_json.get("parameters", {})
+                    "parameters": tool_json.get("parameters", {}),
                 }
             except Exception as e:
                 self.logger.error(f"Failed to parse tool JSON: {e}")
@@ -184,19 +189,19 @@ if __name__ == "__main__":
         model=os.getenv("LLM_INTERFACE_MODEL"),
         api_key=os.getenv("LLM_INTERFACE_API_KEY"),
         base_url=os.getenv("LLM_INTERFACE_BASE_URL"),
-        memory=WindowBufferedMemory()
+        memory=WindowBufferedMemory(),
     )
 
     # Initialize the agent with DEBUG level for more verbose logging
     agent = Agent(
         client_factory=llm_client_factory,
         tools=[CalculatorTool(), TimeTool()],
-        log_level=logging.DEBUG
+        log_level=logging.DEBUG,
     )
 
     while True:
         user_input = input("You: ")
-        if user_input.lower() == 'quit':
+        if user_input.lower() == "quit":
             break
 
         response = agent.process(user_input)

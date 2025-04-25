@@ -6,6 +6,7 @@ from bot.ptb import ptb
 
 router = APIRouter()
 
+
 @router.get("/ping")
 async def ping():
     """Simple ping endpoint to check if the server is running."""

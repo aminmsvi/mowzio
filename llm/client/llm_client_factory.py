@@ -8,11 +8,11 @@ class LlmClientFactory:
     """
 
     def __init__(
-            self,
-            model: str,
-            api_key: str,
-            base_url: str,
-            memory_strategy: Memory = WindowBufferedMemory()
+        self,
+        model: str,
+        api_key: str,
+        base_url: str,
+        memory_strategy: Memory = WindowBufferedMemory(),
     ):
         """
         Initializes the factory with common LLM client parameters.
@@ -30,8 +30,8 @@ class LlmClientFactory:
         self.memory_strategy = memory_strategy
 
     def create(
-            self,
-            system_prompt: str,
+        self,
+        system_prompt: str,
     ) -> LlmClient:
         """
         Creates a new LlmClient instance with a specific system prompt.

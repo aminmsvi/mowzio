@@ -24,10 +24,10 @@ class Tool(ABC):
         params = {}
         sig = inspect.signature(self.execute)
         for param_name, _ in sig.parameters.items():
-            if param_name != 'self':
+            if param_name != "self":
                 params[param_name] = {
                     "type": "string",
-                    "description": f"Parameter {param_name} for {self.name}"
+                    "description": f"Parameter {param_name} for {self.name}",
                 }
         return params
 
