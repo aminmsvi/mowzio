@@ -1,4 +1,5 @@
 import datetime
+import zoneinfo
 
 from .tool import Tool
 
@@ -22,5 +23,6 @@ class TimeTool(Tool):
         Returns:
             A string representing the current date and time.
         """
-        now = datetime.datetime.now()
-        return f"The current date and time is: {now.strftime('%Y-%m-%d %H:%M:%S')}"
+        tehran_tz = zoneinfo.ZoneInfo(key='Asia/Tehran')
+        now = datetime.datetime.now(tz=tehran_tz)
+        return f"The current date and time in Tehran is: {now.strftime('%Y-%m-%d %H:%M:%S')}"
