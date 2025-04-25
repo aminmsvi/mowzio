@@ -35,7 +35,8 @@ class RedisAdapter:
             "db": db,
             "socket_timeout": socket_timeout,
             "retry_on_timeout": retry_on_timeout,
-            "decode_responses": True,  # Always decode responses for easier handling
+            "decode_responses": True,
+            "ssl": True,
         }
         self._client = self._create_client()
 
