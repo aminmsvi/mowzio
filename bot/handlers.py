@@ -15,7 +15,7 @@ from llm.tools import CalculatorTool, TimeTool
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Handler for the /start command."""
     await update.message.reply_text(
-        "Hello Amin! I'm your personal assistant. How can I help you today?"
+        "✨ Beep bop. Mowzio’s awake! Ready to organize, assist, and maybe drop a joke or two."
     )
 
 
