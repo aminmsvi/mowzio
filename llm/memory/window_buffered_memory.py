@@ -6,21 +6,42 @@ from .memory import Memory
 class WindowBufferedMemory(Memory):
     """
     In-memory implementation of the Memory interface.
-    Stores message history in a simple list in memory.
+    Stores a limited window of message history in memory.
+    Preserves system prompts while keeping only the most recent messages.
     """
 
-    def __init__(self):
-        """Initialize an empty message history."""
+    def __init__(self, window_size: int = 20):
+        """
+        Initialize an empty message history with a maximum window size.
+
+        Args:
+            window_size: Maximum number of non-system messages to retain.
+        """
         self._message_history: List[Dict[str, str]] = []
+        self._window_size = window_size
 
     def add_message(self, message: Dict[str, str]) -> None:
         """
-        Add a message to the in-memory history.
+        Add a message to the in-memory history, maintaining the window size limit.
+        System prompts are always preserved regardless of window size.
 
         Args:
             message: A dictionary containing the message with 'role' and 'content' keys.
         """
         self._message_history.append(message)
+
+        # Count system messages to exclude them from the window limit
+        system_messages = [m for m in self._message_history if m.get("role") == "system"]
+        non_system_count = len(self._message_history) - len(system_messages)
+
+        # Remove oldest non-system messages if we exceed the window size
+        while non_system_count > self._window_size:
+            # Find the first non-system message to remove
+            for i, msg in enumerate(self._message_history):
+                if msg.get("role") != "system":
+                    self._message_history.pop(i)
+                    non_system_count -= 1
+                    break
 
     def get_messages(self) -> List[Dict[str, str]]:
         """
