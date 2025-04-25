@@ -1,5 +1,4 @@
 from typing import List, Optional
-import json
 
 from app.db.redis.redis_factory import RedisFactory
 from app.db.redis.redis_adapter import RedisAdapter
