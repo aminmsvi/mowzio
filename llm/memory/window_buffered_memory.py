@@ -28,7 +28,9 @@ class WindowBufferedMemory(Memory):
         self._window_size = window_size
         self._redis: RedisAdapter = RedisFactory.create_redis_adapter(db=REDIS_DB)
         self._messages_key = f"{REDIS_KEY_PREFIX}messages"
-        self.logger.debug(f"Initialized WindowBufferedMemory with window_size={window_size}")
+        self.logger.debug(
+            f"Initialized WindowBufferedMemory with window_size={window_size}"
+        )
 
     def add_message(self, message: Message) -> None:
         """
@@ -51,11 +53,15 @@ class WindowBufferedMemory(Memory):
         # Count system messages to exclude them from the window limit
         system_messages = [m for m in all_messages if m.role == "system"]
         non_system_count = len(all_messages) - len(system_messages)
-        self.logger.debug(f"Current message count: {len(all_messages)} (system: {len(system_messages)}, non-system: {non_system_count})")
+        self.logger.debug(
+            f"Current message count: {len(all_messages)} (system: {len(system_messages)}, non-system: {non_system_count})"
+        )
 
         # If we exceed the window size, rebuild the list without the oldest non-system messages
         if non_system_count > self._window_size:
-            self.logger.info(f"Window size exceeded ({non_system_count} > {self._window_size}), pruning older messages")
+            self.logger.info(
+                f"Window size exceeded ({non_system_count} > {self._window_size}), pruning older messages"
+            )
 
             # Delete the existing list
             self._redis.delete(self._messages_key)
@@ -74,7 +80,9 @@ class WindowBufferedMemory(Memory):
             for msg in preserved_messages:
                 self._redis.rpush(self._messages_key, msg.to_json())
 
-            self.logger.debug(f"Preserved {len(preserved_messages)} messages ({len(system_messages)} system, {min(self._window_size, non_system_count)} non-system)")
+            self.logger.debug(
+                f"Preserved {len(preserved_messages)} messages ({len(system_messages)} system, {min(self._window_size, non_system_count)} non-system)"
+            )
 
     def get_messages(self) -> List[Message]:
         """
@@ -104,7 +112,9 @@ class WindowBufferedMemory(Memory):
 
         # If a system prompt is provided, add it back
         if system_prompt:
-            self.logger.debug(f"Preserving system prompt: {system_prompt.content[:50]}...")
+            self.logger.debug(
+                f"Preserving system prompt: {system_prompt.content[:50]}..."
+            )
             self._redis.rpush(self._messages_key, system_prompt.to_json())
 
     def remove_last_message(self) -> None:
