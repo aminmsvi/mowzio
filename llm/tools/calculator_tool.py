@@ -19,8 +19,7 @@ class CalculatorTool(Tool):
     def parameters(self) -> Dict[str, ToolParameter]:
         return {
             "expression": ToolParameter(
-                type="string",
-                description="The mathematical expression to evaluate"
+                type="string", description="The mathematical expression to evaluate"
             )
         }
 

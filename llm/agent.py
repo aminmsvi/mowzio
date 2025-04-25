@@ -108,7 +108,7 @@ class Agent:
                 self.logger.info(f"Tool call detected: {tool_json.get('name')}")
                 return ToolCall(
                     name=tool_json.get("name"),
-                    parameters=tool_json.get("parameters", {})
+                    parameters=tool_json.get("parameters", {}),
                 )
             except Exception as e:
                 self.logger.error(f"Failed to parse tool JSON: {e}")

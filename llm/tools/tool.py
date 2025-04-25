@@ -3,23 +3,24 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
+
 @dataclass
 class ToolCall:
     """Represents a tool call from the LLM."""
+
     name: str
     parameters: Dict[str, Any] = field(default_factory=dict)
+
 
 @dataclass
 class ToolParameter:
     """Represents a parameter for a tool."""
+
     type: str
     description: str
 
     def to_dict(self):
-        return {
-            "type": self.type,
-            "description": self.description
-        }
+        return {"type": self.type, "description": self.description}
 
 
 class Tool(ABC):

@@ -8,6 +8,7 @@ class Message:
     """
     Represents a message in a conversation.
     """
+
     content: str
     role: Literal["system", "user", "assistant"]
 
@@ -18,10 +19,7 @@ class Message:
     @classmethod
     def from_dict(cls, message_dict: dict) -> "Message":
         """Create a Message from a dictionary."""
-        return cls(
-            role=message_dict["role"],
-            content=message_dict["content"]
-        )
+        return cls(role=message_dict["role"], content=message_dict["content"])
 
 
 class Memory(ABC):

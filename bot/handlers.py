@@ -14,7 +14,9 @@ from llm.tools import CalculatorTool, TimeTool
 @authorized
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """Handler for the /start command."""
-    await update.message.reply_text("starting...")
+    await update.message.reply_text(
+        "Hello Amin! I'm your personal assistant. How can I help you today?"
+    )
 
 
 @authorized
