@@ -1,7 +1,7 @@
 import math
-from typing import Dict, Any
+from typing import Dict
 
-from .tool import Tool
+from .tool import Tool, ToolParameter
 
 
 class CalculatorTool(Tool):
@@ -16,12 +16,12 @@ class CalculatorTool(Tool):
         return "Evaluates mathematical expressions. Use this for calculations."
 
     @property
-    def parameters(self) -> Dict[str, Dict[str, Any]]:
+    def parameters(self) -> Dict[str, ToolParameter]:
         return {
-            "expression": {
-                "type": "string",
-                "description": "The mathematical expression to evaluate",
-            }
+            "expression": ToolParameter(
+                type="string",
+                description="The mathematical expression to evaluate"
+            )
         }
 
     def execute(self, expression: str) -> str:

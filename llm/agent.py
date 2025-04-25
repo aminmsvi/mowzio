@@ -1,10 +1,13 @@
 import logging
 import re
 from typing import Dict, Any, List, Optional
+from dataclasses import dataclass, field
 
 from .client.llm_client_factory import LlmClientFactory
 from .prompts.agent_system_prompt import AGENT_SYSTEM_PROMPT
-from .tools import Tool, CalculatorTool, TimeTool
+from .tools import Tool
+from .tools.tool import ToolCall
+from .tools import CalculatorTool, TimeTool
 
 
 class Agent:
@@ -58,7 +61,10 @@ class Agent:
                 {
                     "name": tool.name,
                     "description": tool.description,
-                    "parameters": tool.parameters,
+                    "parameters": {
+                        param_name: param.to_dict()
+                        for param_name, param in tool.parameters.items()
+                    },
                 }
             )
 
@@ -79,7 +85,7 @@ class Agent:
         self.logger.debug(f"System prompt created with {len(tools_json)} tools")
         return system_prompt
 
-    def parse_tool_call(self, text: str) -> Optional[Dict[str, Any]]:
+    def parse_tool_call(self, text: str) -> Optional[ToolCall]:
         """
         Parse a tool call from the model's response.
 
@@ -87,7 +93,7 @@ class Agent:
             text: The text to parse for a tool call
 
         Returns:
-            A dictionary with the tool name and parameters, or None if no tool call was found
+            A ToolCall object, or None if no tool call was found
         """
         self.logger.debug("Parsing tool call from response")
         # Look for a tool call in the format ```tool {...} ```
@@ -100,10 +106,10 @@ class Agent:
 
                 tool_json = json.loads(match.group(1))
                 self.logger.info(f"Tool call detected: {tool_json.get('name')}")
-                return {
-                    "name": tool_json.get("name"),
-                    "parameters": tool_json.get("parameters", {}),
-                }
+                return ToolCall(
+                    name=tool_json.get("name"),
+                    parameters=tool_json.get("parameters", {})
+                )
             except Exception as e:
                 self.logger.error(f"Failed to parse tool JSON: {e}")
                 return None
@@ -111,18 +117,18 @@ class Agent:
         self.logger.debug("No tool call found in response")
         return None
 
-    def execute_tool(self, tool_call: Dict[str, Any]) -> str:
+    def execute_tool(self, tool_call: ToolCall) -> str:
         """
         Execute a tool based on the parsed tool call.
 
         Args:
-            tool_call: A dictionary with the tool name and parameters
+            tool_call: A ToolCall object with the tool name and parameters
 
         Returns:
             The result of the tool execution
         """
-        tool_name = tool_call.get("name")
-        parameters = tool_call.get("parameters", {})
+        tool_name = tool_call.name
+        parameters = tool_call.parameters
         self.logger.info(f"Executing tool: {tool_name} with parameters: {parameters}")
 
         if tool_name not in self.tools:
@@ -168,7 +174,7 @@ class Agent:
         tool_result = self.execute_tool(tool_call)
 
         # Send the tool result back to the LLM
-        tool_name = tool_call.get("name", "unknown")
+        tool_name = tool_call.name
         result_message = f"Tool '{tool_name}' returned: {tool_result}"
         self.logger.debug(f"Sending tool result to LLM: {result_message}")
 
