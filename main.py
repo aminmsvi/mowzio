@@ -31,7 +31,7 @@ from fastapi import FastAPI
 from app.config import settings
 from app.api.routes import router as api_router
 from bot.ptb import ptb
-from bot.handlers import register_handlers
+from bot.handler_registery import register_handlers
 
 
 @asynccontextmanager
