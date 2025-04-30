@@ -1,16 +1,15 @@
 import json
 import logging
 from dataclasses import dataclass, asdict
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
-from bs4 import BeautifulSoup
+import requests
+from requests.exceptions import RequestException, Timeout, JSONDecodeError
 from telegram import Update
 from telegram.ext import ContextTypes
-
 from app.config import settings
 from app.db.redis import RedisFactory, RedisAdapter
 from bot.decorators import authorized
-from utils import fetch_html
 
 
 # Define a structure for the items to scrape
@@ -21,20 +20,32 @@ class ExchangeRateItem:
     price: Optional[int] = None
 
 
+@dataclass
+class NavasanResponse:
+    """Schema for the Navasan API response"""
+
+    data: Dict[str, Dict[str, str]]
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "NavasanResponse":
+        return cls(data=data)
+
+
 logger = logging.getLogger(__name__)
 
 CACHE_KEY = "exchange_rates"
-CACHE_TTL = 3 * 60 * 60  # 3 hours
+CACHE_TTL = 2 * 60 * 60
+REQUEST_TIMEOUT_SECONDS = 10
 
-# Configuration for items to scrape (tag, id, icon, name)
-ITEMS_TO_SCRAPE: List[Tuple[str, str, str, str]] = [
-    ("td", "usd1", "🇺🇸", "USD"),
-    ("td", "eur1", "🇪🇺", "EUR"),
-    ("td", "azadi1", "🪙", "Azadi"),
-    ("td", "emami1", "🪙", "Emami"),
-    ("td", "azadi1_2", "🪙", "Half Azadi"),
-    ("td", "azadi1_4", "🪙", "Quarter Azadi"),
-    ("span", "gol18", "✨", "Gold 18"),
+# Configuration for items to scrape (key, icon, name)
+ITEMS: List[Tuple[str, str, str]] = [
+    ("usd", "🇺🇸", "USD"),
+    ("eur", "🇪🇺", "EUR"),
+    ("sekkeh", "🪙", "Emami"),
+    ("bahar", "🪙", "Azadi"),
+    ("nim", "🪙", "Half Azadi"),
+    ("rob", "🪙", "Quarter Azadi"),
+    ("18ayar", "✨", "Gold 18"),
 ]
 
 # Default error messages
@@ -81,7 +92,8 @@ async def currensee(update: Update, _: ContextTypes.DEFAULT_TYPE):
         logger.warning("Update message was None in exchange_rates handler.")
 
 
-def _format_rates_in_markdown_v2(rates):
+def _format_rates_in_markdown_v2(rates: List[ExchangeRateItem]) -> str:
+    """Format exchange rates for HTML display in Telegram."""
     response_lines = ["<b>Exchange Rates:</b>\n"]
     for item in rates:
         if item.price is not None:
@@ -96,7 +108,7 @@ def _format_rates_in_markdown_v2(rates):
 
 async def _fetch_and_cache_rates(redis_adapter: RedisAdapter) -> List[ExchangeRateItem]:
     """Fetches fresh rates, caches them, and returns them."""
-    rates = _fetch_fresh_exchange_rates()
+    rates = await _fetch_fresh_exchange_rates()
     if rates:
         try:
             # Convert list of dataclasses to list of dicts for JSON serialization
@@ -115,20 +127,28 @@ async def _fetch_and_cache_rates(redis_adapter: RedisAdapter) -> List[ExchangeRa
     return rates
 
 
-def _fetch_fresh_exchange_rates() -> List[ExchangeRateItem]:
+async def _fetch_fresh_exchange_rates() -> List[ExchangeRateItem]:
     """Fetches and parses fresh exchange rate data from the source URL."""
-    logger.info(f"Attempting to fetch HTML from {settings.BONBAST_URL}")
-    html_content = fetch_html(settings.BONBAST_URL)
-    if not html_content:
-        logger.error(f"Failed to fetch HTML content from {settings.BONBAST_URL}.")
-        return []
+    api_url = f"http://api.navasan.tech/latest/?api_key={settings.NAVASAN_API_KEY}"
+    logger.info(f"Attempting to fetch data from Navasan API")
+
+    session = requests.Session()
+    extracted_rates: List[ExchangeRateItem] = []
 
     try:
-        soup = BeautifulSoup(html_content, "html.parser")
-        extracted_rates: List[ExchangeRateItem] = []
+        response = session.get(api_url, timeout=REQUEST_TIMEOUT_SECONDS)
+        response.raise_for_status()
 
-        for tag, price_id, icon, name in ITEMS_TO_SCRAPE:
-            price = _extract_price_by_id(tag, price_id, soup)
+        data = response.json()
+        if not data:
+            logger.error("Empty response from Navasan API")
+            return []
+
+        api_response = NavasanResponse.from_dict(data)
+
+        for key, icon, name in ITEMS:
+            price_str = api_response.data.get(key, {}).get("value")
+            price = int(price_str) if price_str else None
             extracted_rates.append(ExchangeRateItem(icon=icon, name=name, price=price))
 
         # Log if any prices could not be extracted
@@ -136,50 +156,17 @@ def _fetch_fresh_exchange_rates() -> List[ExchangeRateItem]:
         if failed_items:
             logger.warning(f"Could not extract prices for: {', '.join(failed_items)}")
 
-        return extracted_rates
-
-    except Exception as e:  # Catch potential errors during parsing
-        logger.exception(
-            f"An unexpected error occurred during HTML parsing or price extraction: {e}"
-        )
-        return []
-
-
-def _extract_price_by_id(tag: str, price_id: str, soup: BeautifulSoup) -> Optional[int]:
-    """Extracts price text by tag and ID, cleans it, and converts to int."""
-    price_tag = soup.find(name=tag, id=price_id)
-    if not price_tag:
-        logger.error(f"Price tag with tag='{tag}' and id='{price_id}' not found.")
-        return None
-
-    price_text = price_tag.text.strip().replace(",", "")
-    if not price_text:
-        logger.warning(f"Price tag with id='{price_id}' has empty text.")
-        return None
-
-    try:
-        return int(price_text)
-    except ValueError:
+    except Timeout:
         logger.error(
-            f"Error converting price text '{price_text}' to int for id='{price_id}'."
+            f"Request to Navasan API timed out after {REQUEST_TIMEOUT_SECONDS} seconds"
         )
-        return None
+    except JSONDecodeError:
+        logger.error("Failed to parse JSON response from Navasan API")
+    except RequestException as e:
+        logger.error(f"Request error while fetching from Navasan API: {e}")
+    except Exception as e:
+        logger.exception(f"Unexpected error processing exchange rates: {e}")
+    finally:
+        session.close()
 
-
-# --- Test Script ---
-if __name__ == "__main__":
-    # Create some sample data for testing
-    sample_rates = [
-        ExchangeRateItem(icon="🇺🇸", name="USD", price=81000),
-        ExchangeRateItem(icon="🇪🇺", name="EUR", price=92350),
-        ExchangeRateItem(icon="🪙", name="Azadi", price=68400000),
-        ExchangeRateItem(
-            icon="❓", name="Unknown", price=None
-        ),  # Test case with None price
-    ]
-
-    # Call the function and print the result
-    formatted_output = _format_rates_in_markdown_v2(sample_rates)
-    print("--- Testing _format_rates ---")
-    print(formatted_output)
-    print("--- End Test ---")
+    return extracted_rates
