@@ -174,7 +174,7 @@ class Agent:
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
-    from .memory import WindowBufferedMemory
+    from .memory import PersistedWindowMemory
     from app.config import settings
 
     load_dotenv()
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         model=settings.LLM_CLIENT_MODEL,
         api_key=settings.LLM_CLIENT_API_KEY,
         base_url=settings.LLM_CLIENT_BASE_URL,
-        memory=WindowBufferedMemory(),
+        memory=PersistedWindowMemory(),
     )
 
     # Initialize the agent with DEBUG level for more verbose logging

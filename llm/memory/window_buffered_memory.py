@@ -9,7 +9,7 @@ REDIS_KEY_PREFIX = "chat:memory:"
 REDIS_DB = 0
 
 
-class WindowBufferedMemory(Memory):
+class PersistedWindowMemory(Memory):
     """
     A window-buffered implementation of the Memory interface.
     Preserves system prompts while keeping only the most recent messages.

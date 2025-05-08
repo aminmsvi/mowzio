@@ -6,7 +6,7 @@ from app.config import settings
 from bot.decorators import authorized
 from llm.agent import Agent
 from llm.client import LlmClientFactory
-from llm.memory import WindowBufferedMemory
+from llm.memory import PersistedWindowMemory
 from llm.tools import CalculatorTool, TimeTool
 
 
@@ -21,7 +21,7 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
         model=settings.LLM_CLIENT_MODEL,
         api_key=settings.LLM_CLIENT_API_KEY,
         base_url=settings.LLM_CLIENT_BASE_URL,
-        memory=WindowBufferedMemory(),
+        memory=PersistedWindowMemory(),
     )
 
     tools = [CalculatorTool(), TimeTool()]

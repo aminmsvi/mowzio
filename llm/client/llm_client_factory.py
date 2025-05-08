@@ -1,4 +1,4 @@
-from llm.memory import Memory, WindowBufferedMemory
+from llm.memory import Memory, PersistedWindowMemory
 from .llm_client import LlmClient
 
 
@@ -12,7 +12,7 @@ class LlmClientFactory:
         model: str,
         api_key: str,
         base_url: str,
-        memory: Memory = WindowBufferedMemory(),
+        memory: Memory = PersistedWindowMemory(),
     ):
         """
         Initializes the factory with common LLM client parameters.
