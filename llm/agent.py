@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from llm.client import LlmClient
 from llm.memory import Memory
 from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
+from .config import LLmSettings, default_llm_settings
 from .prompts.tool_usage_prompt import TOOL_USAGE_PROMPT
 from .tools import Tool
 from .tools.tool import ToolCall
@@ -17,10 +18,8 @@ class Agent:
 
     def __init__(
         self,
-        model: str,
-        api_key: str,
-        base_url: str,
         tools: List[Tool],
+        llm_settings: LLmSettings = default_llm_settings,
         system_prompt: str = "You are a helpful assistant.",
         memory: Memory = InMemoryWindowBufferMemory(),
     ):
@@ -28,6 +27,9 @@ class Agent:
         Initialize the agent with an LLM client.
 
         Args:
+            llm_settings: The LLM settings to use.
+            system_prompt: The initial system's prompt to set the context for the model.
+            memory: The strategy to use for storing and retrieving message history.
             tools: A list of tools to use for the agent
         """
         # Configure logging
@@ -45,9 +47,7 @@ class Agent:
             system_prompt=system_prompt,
         )
         self.llm_client = LlmClient(
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
+            llm_settings=llm_settings,
             system_prompt=system_prompt,
             memory=memory,
         )

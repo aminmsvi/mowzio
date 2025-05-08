@@ -2,6 +2,7 @@ from typing import List
 
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
+from llm.config import LLmSettings, default_llm_settings
 from llm.memory import PersistedWindowBufferMemory, Memory, Message
 from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
 
@@ -13,9 +14,7 @@ class LlmClient:
 
     def __init__(
         self,
-        model: str,
-        api_key: str,
-        base_url: str,
+        llm_settings: LLmSettings = default_llm_settings,
         system_prompt: str = "You are a helpful assistant.",
         memory: Memory = InMemoryWindowBufferMemory(),
         temperature: float = 0.1,
@@ -24,20 +23,18 @@ class LlmClient:
         Initializes the LLM client.
 
         Args:
-            model: The name of the LLM model to use (e.g., "openai/gpt-3.5-turbo").
-            api_key: Your LLM API key. Defaults to the LLM_API_KEY environment variable.
-            base_url: The base URL for the LLM API.
+            llm_settings: The LLM settings to use.
             system_prompt: The initial system's prompt to set the context for the model.
             memory: The strategy to use for storing and retrieving message history.
+            temperature: The temperature to use for the model.
         """
-        self.model = model
-        self.base_url = base_url
+        self.llm_settings = llm_settings
         self.system_prompt = Message(role="system", content=system_prompt)
         self.temperature = temperature
 
         self.client = OpenAI(
-            base_url=self.base_url,
-            api_key=api_key,
+            base_url=self.llm_settings.base_url,
+            api_key=self.llm_settings.api_key,
         )
 
         self.memory = memory
@@ -71,7 +68,7 @@ class LlmClient:
             # Convert Message objects to dictionaries for the API
             messages_dict = [msg.to_dict() for msg in self.memory.get_messages()]
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=self.llm_settings.model,
                 messages=messages_dict,
                 temperature=self.temperature,
             )
@@ -121,37 +118,3 @@ class LlmClient:
         If a system prompt was provided during initialization, it will be retained.
         """
         self.memory.clear_messages(system_prompt=self.system_prompt)
-
-
-if __name__ == "__main__":
-    from app.config import settings
-
-    try:
-        # Initialize the chat client with the memory strategy
-        chat_client = LlmClient(
-            model=settings.LLM_CLIENT_MODEL,
-            api_key=settings.LLM_CLIENT_API_KEY,
-            base_url=settings.LLM_CLIENT_BASE_URL,
-            system_prompt="You are a helpful assistant.",
-            memory=PersistedWindowBufferMemory(),
-        )
-
-        print(f"Chatting with {chat_client.model}. Type 'quit' to exit.")
-        while True:
-            user_input = input("You: ")
-            if user_input.lower() == "quit":
-                break
-
-            response_content = chat_client.chat(user_input)
-            print(f"Assistant: {response_content}")
-
-        print("\nMessage History:")
-        for msg in chat_client.get_message_history():
-            print(f"{msg.role}: {msg.content}")
-
-    except ValueError as ve:
-        print(f"Configuration Error: {ve}")
-    except APIError as ae:
-        print(f"OpenRouter API Error: {ae}")
-    except Exception as ex:
-        print(f"An error occurred: {ex}")

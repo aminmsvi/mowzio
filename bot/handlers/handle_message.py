@@ -3,7 +3,6 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from app.config import settings
 from bot.decorators import authorized
 from llm.agent import Agent
 from llm.memory import PersistedWindowBufferMemory
@@ -18,9 +17,6 @@ async def handle_message(update: Update, _: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Received message: {update.message.text}")
 
     agent = Agent(
-        model=settings.LLM_CLIENT_MODEL,
-        api_key=settings.LLM_CLIENT_API_KEY,
-        base_url=settings.LLM_CLIENT_BASE_URL,
         system_prompt="You are Mowzio, an AI assistant capable of using tools to answer questions and fulfill requests for Amin.",
         tools=[CalculatorTool(), TimeTool()],
         memory=PersistedWindowBufferMemory(),
