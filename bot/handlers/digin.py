@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from telegram import Update
 from telegram.ext import ContextTypes
 from duckduckgo_search import DDGS
-from scrapling.fetchers import StealthyFetcher
-from trafilatura import extract
+from trafilatura import extract, fetch_url
 
 from app.config import settings
 from bot.decorators import authorized
@@ -62,31 +61,25 @@ async def _fetch_and_clean_pages(
     Fetches and cleans the content of web pages from search results.
     """
     cleaned_pages = []
-    fetcher = StealthyFetcher()
     for result in search_results:
         try:
-            page = await asyncio.to_thread(
-                fetcher.fetch,
-                url=result.url,
-                block_webrtc=True,
-                allow_webgl=False,
-                humanize=True,
-                geoip=True,
-                os_randomize=True,
-                disable_ads=True,
-                google_search=True,
-            )
-            cleaned_text = await asyncio.to_thread(extract, page.text)
-            if cleaned_text:  # Ensure we have some text after extraction
-                cleaned_page = CleanedPageContent(
-                    result=result,
-                    cleaned_text=cleaned_text,
-                )
-                cleaned_pages.append(cleaned_page)
+            # Download the page content using trafilatura's fetch_url
+            downloaded_file = await asyncio.to_thread(fetch_url, result.url)
+            if downloaded_file:
+                # Extract text content from the downloaded file
+                cleaned_text = await asyncio.to_thread(extract, downloaded_file)
+                if cleaned_text:  # Ensure we have some text after extraction
+                    cleaned_page = CleanedPageContent(
+                        result=result,
+                        cleaned_text=cleaned_text,
+                    )
+                    cleaned_pages.append(cleaned_page)
+                else:
+                    logger.warning(
+                        f"No content extracted from {result.url}. Extraction might have failed or page was empty."
+                    )
             else:
-                logger.warning(
-                    f"No content extracted from {result.url}. Extraction might have failed or page was empty."
-                )
+                logger.warning(f"Failed to download content from {result.url}.")
         except Exception as e:
             logger.error(f"Error fetching or cleaning {result.url}: {e}", exc_info=True)
             continue
