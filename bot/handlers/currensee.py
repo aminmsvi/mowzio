@@ -59,7 +59,7 @@ async def currensee(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """
     Handler for the /exchange_rates command. Fetches exchange rates, using cache if possible.
     """
-    redis_adapter = RedisFactory.create_redis_adapter()
+    redis_adapter = RedisFactory.create_adapter()
     response_message = ERROR_FETCH_FAILED  # Default message
 
     try:

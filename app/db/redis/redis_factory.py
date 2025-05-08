@@ -11,8 +11,10 @@ class RedisFactory:
     """
 
     @staticmethod
-    def create_redis_adapter(
-        db: int = 0, socket_timeout: int = 5, retry_on_timeout: bool = True
+    def create_adapter(
+        db: int = 0,
+        socket_timeout: int = 5,
+        retry_on_timeout: bool = True,
     ) -> RedisAdapter:
         """
         Create a Redis adapter instance with application configuration.

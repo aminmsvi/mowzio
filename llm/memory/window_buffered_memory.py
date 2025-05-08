@@ -26,7 +26,7 @@ class PersistedWindowMemory(Memory):
         self.logger = logging.getLogger(__name__)
 
         self._window_size = window_size
-        self._redis: RedisAdapter = RedisFactory.create_redis_adapter(db=REDIS_DB)
+        self._redis: RedisAdapter = RedisFactory.create_adapter(db=REDIS_DB)
         self._messages_key = f"{REDIS_KEY_PREFIX}messages"
         self.logger.debug(
             f"Initialized WindowBufferedMemory with window_size={window_size}"
