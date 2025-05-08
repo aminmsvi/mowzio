@@ -30,7 +30,9 @@ class InMemoryWindowMemory(Memory):
             message: A Message object containing the role and content.
         """
         if message.role == "system":
-            self._system_message = message  # Replace existing system message or set new one
+            self._system_message = (
+                message  # Replace existing system message or set new one
+            )
         else:
             self._messages.append(message)
             # Maintain window size for non-system messages
@@ -66,7 +68,7 @@ class InMemoryWindowMemory(Memory):
     def remove_last_message(self) -> None:
         """
         Remove the last non-system message from the history.
-        The system prompt is not affected by this operation.
+        This operation does not affect the system prompt.
         """
         if self._messages:
             self._messages.pop()

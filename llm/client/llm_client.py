@@ -1,7 +1,9 @@
 from typing import List
+
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
 from llm.memory import PersistedWindowMemory, Memory, Message
+from llm.memory.in_memory_window_memory import InMemoryWindowMemory
 
 
 class LlmClient:
@@ -15,7 +17,7 @@ class LlmClient:
         api_key: str,
         base_url: str,
         system_prompt: str = "You are a helpful assistant.",
-        memory: Memory = PersistedWindowMemory(),
+        memory: Memory = InMemoryWindowMemory(),
         temperature: float = 0.1,
     ):
         """
@@ -25,12 +27,11 @@ class LlmClient:
             model: The name of the LLM model to use (e.g., "openai/gpt-3.5-turbo").
             api_key: Your LLM API key. Defaults to the LLM_API_KEY environment variable.
             base_url: The base URL for the LLM API.
-            system_prompt: The initial system prompt to set the context for the model.
+            system_prompt: The initial system's prompt to set the context for the model.
             memory: The strategy to use for storing and retrieving message history.
         """
         self.model = model
         self.base_url = base_url
-        self.system_prompt_text = system_prompt
         self.system_prompt = Message(role="system", content=system_prompt)
         self.temperature = temperature
 
