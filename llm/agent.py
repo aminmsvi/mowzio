@@ -1,33 +1,39 @@
 import logging
 import re
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
-from .client.llm_client_factory import LlmClientFactory
-from .prompts.agent_system_prompt import AGENT_SYSTEM_PROMPT
+from llm.client import LlmClient
+from llm.memory import Memory
+from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
+from .config import LLmSettings, default_llm_settings
+from .prompts.tool_usage_prompt import TOOL_USAGE_PROMPT
 from .tools import Tool
 from .tools.tool import ToolCall
-from .tools import CalculatorTool, TimeTool
 
 
 class Agent:
     """
-    An AI agent that can use various tools to accomplish tasks.
+    An AI agent that can use various tools to carry out tasks.
     """
 
     def __init__(
         self,
-        client_factory: LlmClientFactory,
         tools: List[Tool],
+        llm_settings: LLmSettings = default_llm_settings,
+        system_prompt: str = "You are a helpful assistant.",
+        memory: Memory = InMemoryWindowBufferMemory(),
     ):
         """
         Initialize the agent with an LLM client.
 
         Args:
-            client_factory: The LLM client factory to use for generating responses
+            llm_settings: The LLM settings to use.
+            system_prompt: The initial system's prompt to set the context for the model.
+            memory: The strategy to use for storing and retrieving message history.
             tools: A list of tools to use for the agent
         """
         # Configure logging
+        self.memory = memory
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
@@ -36,14 +42,24 @@ class Agent:
         self.logger.debug(f"Registered tools: {list(self.tools.keys())}")
 
         # Set up the system prompt with tool usage instructions
-        system_prompt = self._create_system_prompt(self.tools)
-        self.llm_client = client_factory.create(system_prompt)
+        system_prompt = self._create_system_prompt(
+            tools=self.tools,
+            system_prompt=system_prompt,
+        )
+        self.llm_client = LlmClient(
+            llm_settings=llm_settings,
+            system_prompt=system_prompt,
+            memory=memory,
+        )
         self.logger.info("Agent initialized successfully")
 
-    def _create_system_prompt(self, tools: Dict[str, Tool]) -> str:
+    def _create_system_prompt(self, tools: Dict[str, Tool], system_prompt: str) -> str:
         """Update the system prompt with current tool definitions."""
         self.logger.debug("Creating system prompt with tool definitions")
         tools_json = []
+
+        if len(tools) == 0:
+            return system_prompt
 
         for tool in tools.values():
             tools_json.append(
@@ -57,22 +73,22 @@ class Agent:
                 }
             )
 
-        system_prompt = AGENT_SYSTEM_PROMPT
+        prompt = f"{system_prompt}\n{TOOL_USAGE_PROMPT}"
 
         # Add tool descriptions to system prompt
         for tool_json in tools_json:
-            system_prompt += f"\n- {tool_json['name']}: {tool_json['description']}"
-            system_prompt += "\n  Parameters:"
+            prompt += f"\n- {tool_json['name']}: {tool_json['description']}"
+            prompt += "\n  Parameters:"
             for param_name, param_details in tool_json["parameters"].items():
-                system_prompt += f"\n  - {param_name}: {param_details['description']}"
+                prompt += f"\n  - {param_name}: {param_details['description']}"
 
         # If no tools are available, add a note
         if not tools_json:
-            system_prompt += "\nNo tools are currently available."
+            prompt += "\nNo tools are currently available."
             self.logger.warning("No tools available for the agent")
 
         self.logger.debug(f"System prompt created with {len(tools_json)} tools")
-        return system_prompt
+        return prompt
 
     def parse_tool_call(self, text: str) -> Optional[ToolCall]:
         """
@@ -170,33 +186,3 @@ class Agent:
         final_response = self.llm_client.chat(result_message)
         self.logger.debug(f"Final LLM response: {final_response}")
         return final_response
-
-
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-    from .memory import WindowBufferedMemory
-    from app.config import settings
-
-    load_dotenv()
-
-    # Initialize the LLM client
-    llm_client_factory = LlmClientFactory(
-        model=settings.LLM_CLIENT_MODEL,
-        api_key=settings.LLM_CLIENT_API_KEY,
-        base_url=settings.LLM_CLIENT_BASE_URL,
-        memory=WindowBufferedMemory(),
-    )
-
-    # Initialize the agent with DEBUG level for more verbose logging
-    agent = Agent(
-        client_factory=llm_client_factory,
-        tools=[CalculatorTool(), TimeTool()],
-    )
-
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "quit":
-            break
-
-        response = agent.process(user_input)
-        print(f"Agent: {response}")

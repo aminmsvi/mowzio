@@ -9,7 +9,7 @@ REDIS_KEY_PREFIX = "chat:memory:"
 REDIS_DB = 0
 
 
-class WindowBufferedMemory(Memory):
+class PersistedWindowBufferMemory(Memory):
     """
     A window-buffered implementation of the Memory interface.
     Preserves system prompts while keeping only the most recent messages.
@@ -26,7 +26,7 @@ class WindowBufferedMemory(Memory):
         self.logger = logging.getLogger(__name__)
 
         self._window_size = window_size
-        self._redis: RedisAdapter = RedisFactory.create_redis_adapter(db=REDIS_DB)
+        self._redis: RedisAdapter = RedisFactory.create_adapter(db=REDIS_DB)
         self._messages_key = f"{REDIS_KEY_PREFIX}messages"
         self.logger.debug(
             f"Initialized WindowBufferedMemory with window_size={window_size}"
