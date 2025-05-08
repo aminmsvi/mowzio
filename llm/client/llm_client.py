@@ -2,8 +2,8 @@ from typing import List
 
 from openai import OpenAI, APIError, RateLimitError, APIConnectionError
 
-from llm.memory import PersistedWindowMemory, Memory, Message
-from llm.memory.in_memory_window_memory import InMemoryWindowMemory
+from llm.memory import PersistedWindowBufferMemory, Memory, Message
+from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
 
 
 class LlmClient:
@@ -17,7 +17,7 @@ class LlmClient:
         api_key: str,
         base_url: str,
         system_prompt: str = "You are a helpful assistant.",
-        memory: Memory = InMemoryWindowMemory(),
+        memory: Memory = InMemoryWindowBufferMemory(),
         temperature: float = 0.1,
     ):
         """
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             api_key=settings.LLM_CLIENT_API_KEY,
             base_url=settings.LLM_CLIENT_BASE_URL,
             system_prompt="You are a helpful assistant.",
-            memory=PersistedWindowMemory(),
+            memory=PersistedWindowBufferMemory(),
         )
 
         print(f"Chatting with {chat_client.model}. Type 'quit' to exit.")

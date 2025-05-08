@@ -9,7 +9,7 @@ REDIS_KEY_PREFIX = "chat:memory:"
 REDIS_DB = 0
 
 
-class PersistedWindowMemory(Memory):
+class PersistedWindowBufferMemory(Memory):
     """
     A window-buffered implementation of the Memory interface.
     Preserves system prompts while keeping only the most recent messages.
@@ -71,7 +71,7 @@ class PersistedWindowMemory(Memory):
 
             # Add the most recent non-system messages up to window_size
             non_system_messages = [m for m in all_messages if m.role != "system"]
-            preserved_messages.extend(non_system_messages[-self._window_size :])
+            preserved_messages.extend(non_system_messages[-self._window_size:])
 
             # Sort messages back into original order
             preserved_messages.sort(key=lambda m: all_messages.index(m))

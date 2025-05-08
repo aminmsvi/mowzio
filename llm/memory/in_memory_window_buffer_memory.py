@@ -1,10 +1,10 @@
-from typing import List, Optional, Deque
 from collections import deque
+from typing import List, Optional, Deque
 
 from .memory import Memory, Message
 
 
-class InMemoryWindowMemory(Memory):
+class InMemoryWindowBufferMemory(Memory):
     """
     An in-memory, window-buffered implementation of the Memory interface.
     Preserves a single system prompt while keeping only the most recent non-system messages.

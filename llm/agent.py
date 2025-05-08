@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from llm.client import LlmClient
 from llm.memory import Memory
-from llm.memory.in_memory_window_memory import InMemoryWindowMemory
+from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
 from .prompts.tool_usage_prompt import TOOL_USAGE_PROMPT
 from .tools import Tool
 from .tools.tool import ToolCall
@@ -22,7 +22,7 @@ class Agent:
         base_url: str,
         tools: List[Tool],
         system_prompt: str = "You are a helpful assistant.",
-        memory: Memory = InMemoryWindowMemory(),
+        memory: Memory = InMemoryWindowBufferMemory(),
     ):
         """
         Initialize the agent with an LLM client.

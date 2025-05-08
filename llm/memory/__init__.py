@@ -1,4 +1,4 @@
-from .persisted_window_memory import PersistedWindowMemory
+from .persisted_window_buffer_memory import PersistedWindowBufferMemory
 from .memory import Memory, Message
 
-__all__ = ["PersistedWindowMemory", "Memory", "Message"]
+__all__ = ["PersistedWindowBufferMemory", "Memory", "Message"]
