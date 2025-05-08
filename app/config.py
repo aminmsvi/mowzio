@@ -18,6 +18,8 @@ class Settings(BaseSettings):
 
     NAVASAN_API_KEY: str
 
+    SERPAPI_API_KEY: str
+
     DIGIN_MAX_RESULTS: int
 
     model_config = SettingsConfigDict(

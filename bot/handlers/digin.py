@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from telegram import Update
 from telegram.ext import ContextTypes
-from duckduckgo_search import DDGS
+from serpapi import GoogleSearch
 from trafilatura import extract, fetch_url
 
 from app.config import settings
@@ -198,13 +198,29 @@ def _format_report(report: FinalReport) -> str:
     return response_text
 
 
-def _search_duckduckgo(query: str, max_results: int) -> list[SearchResult]:
+def _search_with_serpapi(query: str, max_results: int) -> list[SearchResult]:
     """
-    Search DuckDuckGo for the given query.
+    Search using SerpApi (Google Search) for the given query.
     """
-    with DDGS() as ddgs:
-        results = ddgs.text(query, max_results=max_results)
-    return [SearchResult(title=r["title"], url=r["href"]) for r in results]
+    params = {
+        "q": query,
+        "engine": "google",
+        "num": max_results,
+        "api_key": settings.SERPAPI_API_KEY,
+    }
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        organic_results = results.get("organic_results", [])
+
+        return [
+            SearchResult(title=r.get("title", "No Title"), url=r.get("link", ""))
+            for r in organic_results
+            if r.get("link")
+        ]
+    except Exception as e:
+        logger.error(f"SerpApi search failed for query '{query}': {e}", exc_info=True)
+        return []
 
 
 @authorized
@@ -224,7 +240,7 @@ async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     all_search_results = []
     for query in search_queries:
-        results_for_query = _search_duckduckgo(
+        results_for_query = _search_with_serpapi(
             query=query,
             max_results=settings.DIGIN_MAX_RESULTS,
         )
