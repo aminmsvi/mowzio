@@ -63,14 +63,8 @@ Follow these steps:
 3. **Generate a Summary:** Generate a summary of the content in 400 words or less.
 
 **Output Format:**
-Output the result in JSON format with a single key `summary` whose value is a JSON object with a single key `summary` whose value is a string (the generated summary).
 
-{
-  "summary": "summary"
-}
-
-Now, summarize the following content in the specified JSON format. Note that your response should be a JSON object with a single key `summary` whose value is a JSON object with a single key `summary` whose value is a string (the generated summary).
-**Do not include any other text in your response.**
+your entire response MUST be the generated summary and nothing else.
 """
 
 SYNTHESIS_PROMPT = """
@@ -104,9 +98,9 @@ You are a meticulous Research Analyst AI. Your primary objective is to synthesiz
 
 **Mandatory Output Format:**
 
-Your entire response MUST be a single JSON object. This JSON object must contain a single key: `"synthesized_report_text"`. The value associated with this key will be a single string. This string should contain your complete, structured answer, including any introduction, the main body with inline citations, any conclusion, and the "References:" section.
+Your entire response MUST be a single string. This string should contain your complete, structured answer, including any introduction, the main body with inline citations, any conclusion, and the "References:" section.
 
-**Example of the expected string value for "synthesized_report_text":**
+**Example of the expected string value:**
 The user's query concerns the primary applications of quantum computing in pharmaceutical research. Based on the provided sources, quantum computing is poised to revolutionize drug discovery by significantly accelerating the simulation of molecular interactions [1]. This can lead to more accurate predictions of drug efficacy and potential side effects [2]. Furthermore, source [3] highlights its potential in personalized medicine by analyzing complex genomic data. While source [1] and [2] focus on simulation, source [3] also mentions optimization problems in drug development pipelines.
 However, it's important to note that widespread practical application still faces challenges related to hardware stability and algorithm development [2].
 References:
