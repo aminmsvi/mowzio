@@ -20,7 +20,12 @@ logging.config.dictConfig(
                 "handlers": ["default"],
                 "level": "DEBUG",
                 "propagate": True,
-            }
+            },
+            "httpcore.http11": {
+                "handlers": ["default"],
+                "level": "CRITICAL",
+                "propagate": False,
+            },
         },
     }
 )
