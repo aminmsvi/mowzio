@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 from dataclasses import dataclass
 
@@ -50,8 +51,14 @@ async def _plan_searches(user_query: str) -> list[str]:
     Plans search queries based on the user's input.
     """
     search_planner_agent = Agent(system_prompt=SEARCH_PLAN_PROMPT)
-    search_plan = await asyncio.to_thread(search_planner_agent.process, user_query)
-    return search_plan.get("search_queries", [])
+    search_plan_str = await asyncio.to_thread(search_planner_agent.process, user_query)
+    try:
+        search_plan = json.loads(search_plan_str)
+        return search_plan.get("search_queries", [])
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse search plan JSON: {e}", exc_info=True)
+        logger.error(f"Received string was: {search_plan_str}")
+        return []
 
 
 async def _fetch_and_clean_pages(
@@ -99,7 +106,12 @@ async def _summarize_pages(
             summary_result = await asyncio.to_thread(
                 summarizer_agent.process, cleaned_page.cleaned_text
             )
-            summary_text = summary_result.get("summary")
+            try:
+                summary_text = json.loads(summary_result).get("summary", "")
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse summary JSON: {e}", exc_info=True)
+                logger.error(f"Received string was: {summary_result}")
+                summary_text = ""
             if summary_text:
                 summarized_page = SummerizedPageContent(
                     result=cleaned_page.result,
@@ -148,9 +160,14 @@ async def _synthesize_report(
         synthesis_agent.process, context_for_synthesis
     )
 
-    final_answer_text = synthesized_output.get(
-        "synthesized_report_text", "Could not synthesize an answer."
-    )
+    try:
+        final_answer_text = json.loads(synthesized_output).get(
+            "synthesized_report_text", "Could not synthesize an answer."
+        )
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse synthesized output JSON: {e}", exc_info=True)
+        logger.error(f"Received string was: {synthesized_output}")
+        final_answer_text = "Could not synthesize an answer."
 
     # Ensure unique sources, considering some results might be from the same URL due to multiple search queries
     # The SearchResult dataclass needs to be hashable for set to work, or implement __eq__ and __hash__.
