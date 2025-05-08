@@ -21,22 +21,14 @@ Follow these steps:
 **Output Format:**
 Output the result in JSON format with a single key `search_queries` whose value is a JSON array of strings (the generated queries).
 
-```json
 {
   "search_queries": [
     "query 1",
     "query 2",
     "query 3",
     ...
-  ],
-  "desired_information": [
-    "desired information 1",
-    "desired information 2",
-    "desired information 3",
-    ...
   ]
 }
-```
 
 **Example:**
 
@@ -45,7 +37,6 @@ I am a beginner programmer setting up my development environment. How can I inst
 
 Expected Output:
 
-```json
 {
   "search_queries": [
     "install python macos ventura homebrew",
@@ -57,8 +48,9 @@ Expected Output:
     "install specific python version mac homebrew"
   ]
 }
-```
-Now, analyze each of the following user messages and generate the search queries in the specified JSON format.
+
+Now, analyze each of the following user messages and generate the search queries in the specified JSON format. Note that your response should be a JSON object with a single key `search_queries` whose value is a JSON array of strings (the generated queries).
+**Do not include any other text in your response.**
 """
 
 PAGE_SUMMARIZER_PROMPT = """
@@ -73,13 +65,12 @@ Follow these steps:
 **Output Format:**
 Output the result in JSON format with a single key `summary` whose value is a JSON object with a single key `summary` whose value is a string (the generated summary).
 
-```json
 {
   "summary": "summary"
 }
-```
 
-Now, summarize the following content in the specified JSON format.
+Now, summarize the following content in the specified JSON format. Note that your response should be a JSON object with a single key `summary` whose value is a JSON object with a single key `summary` whose value is a string (the generated summary).
+**Do not include any other text in your response.**
 """
 
 SYNTHESIS_PROMPT = """
@@ -124,4 +115,5 @@ References:
 [3] Personalized Medicine and Quantum Algorithms (http://example.com/quantum-genomics)
 
 Now, analyze the input provided (original user query and source summaries) and generate the output strictly adhering to the JSON format and content structure specified above.
+**Do not include any other text in your response.**
 """
