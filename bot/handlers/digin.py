@@ -77,7 +77,7 @@ async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not cleaned_pages:
         return
 
-    summaries = await _summarize_pages(update, cleaned_pages)
+    summaries = await _summarize_pages(update, user_query, cleaned_pages)
     if not summaries:
         return
 
@@ -91,6 +91,14 @@ async def _plan_searches(update: Update, user_query: str) -> list[str]:
     search_planner_agent = Agent(system_prompt=SEARCH_PLAN_PROMPT)
     search_plan_str = await asyncio.to_thread(search_planner_agent.process, user_query)
     search_queries = []
+
+    if not search_plan_str or search_plan_str.strip() == "":
+        await update.message.reply_text(
+            "Hmm, It seems the guy who is supposed to plan the digin is sleeping or something :(. "
+            "Please try again later."
+        )
+        return []
+
     try:
         search_plan = json.loads(search_plan_str)
         search_queries = search_plan.get("search_queries", [])
@@ -157,6 +165,7 @@ async def _fetch_and_clean_pages(
 
 async def _summarize_pages(
     update: Update,
+    user_query: str,
     cleaned_pages: list[CleanedPageContent],
 ) -> list[SummerizedPageContent]:
     """
@@ -166,8 +175,9 @@ async def _summarize_pages(
         "📚 Perfect! Now let me weave these threads into a beautiful tapestry..."
     )
 
+    system_prompt = PAGE_SUMMARIZER_PROMPT.replace("{query}", user_query)
     summaries = []
-    summarizer_agent = Agent(system_prompt=PAGE_SUMMARIZER_PROMPT)
+    summarizer_agent = Agent(system_prompt=system_prompt)
     for cleaned_page in cleaned_pages:
         try:
             summary_result = await asyncio.to_thread(

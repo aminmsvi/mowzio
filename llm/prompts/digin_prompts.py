@@ -54,17 +54,25 @@ Now, analyze each of the following user messages and generate the search queries
 """
 
 PAGE_SUMMARIZER_PROMPT = """
-You are a summarizer assistant. Your task is to summarize the content of a page.
+You are a summarizer assistant. Your task is to summarize the content of a page in relation to the original user query.
 
 Follow these steps:
 
 1. **Read the Content:** Read the content of the page carefully.
-2. **Identify the Main Points:** Identify the main points of the content.
-3. **Generate a Summary:** Generate a summary of the content in 400 words or less.
+2. **Identify Query Relevance:** Determine which parts of the content are most relevant to the original user query.
+3. **Identify the Main Points:** Focus on identifying the main points that directly address or relate to the user's query.
+4. **Generate a Summary:** Generate a concise summary (200 - 300 words or less) that:
+   - Prioritizes information relevant to the original query
+   - Maintains context and accuracy
+   - Excludes irrelevant details
+   - Preserves key facts, figures, and conclusions
+   - Uses clear, objective language
 
-**Output Format:**
+Your entire response MUST be the generated summary and nothing else.
+The summary should be focused on answering the query while providing necessary context from the source material.
 
-your entire response MUST be the generated summary and nothing else.
+**Query:**
+{query}
 """
 
 SYNTHESIS_PROMPT = """
