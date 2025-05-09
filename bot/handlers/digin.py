@@ -56,7 +56,7 @@ async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await _validate_user_query(update, user_query):
         return
 
-    search_queries = await _plan_and_notify_searches(update, user_query)
+    search_queries = await _plan_searches(update, user_query)
     if not search_queries:
         return
 
@@ -73,33 +73,47 @@ async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not all_search_results:
         return
 
-    cleaned_pages = await _fetch_and_clean_and_notify(update, all_search_results)
+    cleaned_pages = await _fetch_and_clean_pages(update, all_search_results)
     if not cleaned_pages:
         return
 
-    summaries = await _summarize_and_notify_pages(update, cleaned_pages)
+    summaries = await _summarize_pages(update, cleaned_pages)
     if not summaries:
         return
 
-    await _synthesize_and_send_report(update, user_query, summaries)
+    await _synthesize_report(update, user_query, summaries)
 
 
-async def _plan_searches(user_query: str) -> list[str]:
+async def _plan_searches(update: Update, user_query: str) -> list[str]:
     """
     Plans search queries based on the user's input.
     """
     search_planner_agent = Agent(system_prompt=SEARCH_PLAN_PROMPT)
     search_plan_str = await asyncio.to_thread(search_planner_agent.process, user_query)
+    search_queries = []
     try:
         search_plan = json.loads(search_plan_str)
-        return search_plan.get("search_queries", [])
+        search_queries = search_plan.get("search_queries", [])
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse search plan JSON: {e}", exc_info=True)
         logger.error(f"Received string was: {search_plan_str}")
+        search_queries = []
+
+    if not search_queries:
+        await update.message.reply_text(
+            "🤔 Hmm, my digital compass seems to be spinning in circles! "
+            "Perhaps try a different angle or a more specific query?"
+        )
         return []
+
+    await update.message.reply_text(
+        "🗺️ I've sketched out my treasure map! Time to start digging!"
+    )
+    return search_queries
 
 
 async def _fetch_and_clean_pages(
+    update: Update,
     search_results: list[SearchResult],
 ) -> list[CleanedPageContent]:
     """
@@ -128,15 +142,30 @@ async def _fetch_and_clean_pages(
         except Exception as e:
             logger.error(f"Error fetching or cleaning {result.url}: {e}", exc_info=True)
             continue
+
+    if not cleaned_pages:
+        await update.message.reply_text(
+            "🧹 Oops! My digital broom broke while cleaning up the information!"
+        )
+        return []
+
+    await update.message.reply_text(
+        "✨ Sparkling clean! Now let me organize these gems..."
+    )
     return cleaned_pages
 
 
 async def _summarize_pages(
+    update: Update,
     cleaned_pages: list[CleanedPageContent],
 ) -> list[SummerizedPageContent]:
     """
     Summarizes the content of cleaned web pages.
     """
+    await update.message.reply_text(
+        "📚 Perfect! Now let me weave these threads into a beautiful tapestry..."
+    )
+
     summaries = []
     summarizer_agent = Agent(system_prompt=PAGE_SUMMARIZER_PROMPT)
     for cleaned_page in cleaned_pages:
@@ -159,12 +188,19 @@ async def _summarize_pages(
                 f"Error summarizing {cleaned_page.result.url}: {e}", exc_info=True
             )
             continue
+
+    if not summaries:
+        await update.message.reply_text(
+            "📝 My digital quill ran out of ink while summarizing!"
+        )
+        return []
+
     return summaries
 
 
 async def _synthesize_report(
-    original_query: str, summarized_pages: list[SummerizedPageContent]
-) -> FinalReport:
+    update: Update, original_query: str, summarized_pages: list[SummerizedPageContent]
+):
     """
     Synthesizes a final report from the original query and summarized page content.
     """
@@ -172,11 +208,10 @@ async def _synthesize_report(
         logger.warning(
             f"No summaries available to synthesize report for query: '{original_query}'."
         )
-        return FinalReport(
-            original_query=original_query,
-            synthesized_answer="Could not gather enough information to provide an answer.",
-            all_sources_consulted=[],
+        await update.message.reply_text(
+            "Could not gather enough information to provide an answer :("
         )
+        return
 
     context_for_synthesis = f'Original User Query: "{original_query}"\n\n'
     context_for_synthesis += "Please synthesize the information from the following summaries to answer the user's query. Cite the source title or URL when using information from a specific source.\n\n"
@@ -199,11 +234,24 @@ async def _synthesize_report(
             unique_source_results.append(sp.result)
             seen_urls.add(sp.result.url)
 
-    return FinalReport(
+    report = FinalReport(
         original_query=original_query,
         synthesized_answer=synthesized_output,
         all_sources_consulted=unique_source_results,
     )
+
+    if not report:
+        await update.message.reply_text(
+            "🧩 My digital puzzle pieces just won't fit together!"
+        )
+        return
+
+    await update.message.reply_text(report.synthesized_answer)
+
+    all_sources_message = "Sources consulted:\n"
+    for source in report.all_sources_consulted:
+        all_sources_message += f"{source.title}\n{source.url}\n\n"
+    await update.message.reply_text(all_sources_message)
 
 
 def _search_with_serpapi(query: str, max_results: int) -> list[SearchResult]:
@@ -245,26 +293,6 @@ async def _validate_user_query(update: Update, user_query: str) -> bool:
     return True
 
 
-async def _plan_and_notify_searches(update: Update, user_query: str) -> list[str]:
-    """
-    Plans search queries and notifies the user.
-    Returns the list of search queries or an empty list if planning fails.
-    """
-    search_queries = await _plan_searches(user_query)
-
-    if not search_queries:
-        await update.message.reply_text(
-            "🤔 Hmm, my digital compass seems to be spinning in circles! "
-            "Perhaps try a different angle or a more specific query?"
-        )
-        return []
-    else:
-        await update.message.reply_text(
-            "🗺️ I've sketched out my treasure map! Time to start digging!"
-        )
-        return search_queries
-
-
 async def _execute_and_process_searches(
     update: Update, search_tasks: list
 ) -> list[SearchResult]:
@@ -289,66 +317,7 @@ async def _execute_and_process_searches(
         )
         return []
 
-    message = "💎 Eureka! Found some shiny information!\n\n"
-    for result in all_search_results:
-        message += f"{result.title}\n{result.url}\n\n"
-    message += "Now let me polish it up..."
-    await update.message.reply_text(message)
+    await update.message.reply_text(
+        "💎 Eureka! Found some shiny information! Now let me polish it up..."
+    )
     return all_search_results
-
-
-async def _fetch_and_clean_and_notify(
-    update: Update, search_results: list[SearchResult]
-) -> list[CleanedPageContent]:
-    """
-    Fetches and cleans pages from search results and notifies the user.
-    Returns a list of CleanedPageContent objects or an empty list if cleaning fails.
-    """
-    cleaned_pages = await _fetch_and_clean_pages(search_results)
-    if not cleaned_pages:
-        await update.message.reply_text(
-            "🧹 Oops! My digital broom broke while cleaning up the information!"
-        )
-        return []
-
-    await update.message.reply_text(
-        "✨ Sparkling clean! Now let me organize these gems..."
-    )
-    return cleaned_pages
-
-
-async def _summarize_and_notify_pages(
-    update: Update, cleaned_pages: list[CleanedPageContent]
-) -> list[SummerizedPageContent]:
-    """
-    Summarizes cleaned pages and notifies the user.
-    Returns a list of SummarizedPageContent objects or an empty list if summarization fails.
-    """
-    await update.message.reply_text(
-        "📚 Perfect! Now let me weave these threads into a beautiful tapestry..."
-    )
-
-    summaries = await _summarize_pages(cleaned_pages)
-    if not summaries:
-        await update.message.reply_text(
-            "📝 My digital quill ran out of ink while summarizing!"
-        )
-        return []
-    return summaries
-
-
-async def _synthesize_and_send_report(
-    update: Update, user_query: str, summaries: list[SummerizedPageContent]
-):
-    """
-    Synthesizes the final report and sends it to the user.
-    """
-    report = await _synthesize_report(user_query, summaries)
-
-    if not report:
-        await update.message.reply_text(
-            "🧩 My digital puzzle pieces just won't fit together!"
-        )
-        return
-
-    await update.message.reply_text(report)
