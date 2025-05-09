@@ -46,6 +46,44 @@ class FinalReport:
     all_sources_consulted: list[SearchResult]
 
 
+@authorized
+async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle the /digin command.
+    """
+    user_query = update.message.text.replace("/digin", "").strip()
+
+    if not await _validate_user_query(update, user_query):
+        return
+
+    search_queries = await _plan_and_notify_searches(update, user_query)
+    if not search_queries:
+        return
+
+    search_tasks = []
+    for query in search_queries:
+        task = asyncio.to_thread(
+            _search_with_serpapi,
+            query,  # Pass arguments positionally to asyncio.to_thread
+            settings.DIGIN_MAX_RESULTS,
+        )
+        search_tasks.append(task)
+
+    all_search_results = await _execute_and_process_searches(update, search_tasks)
+    if not all_search_results:
+        return
+
+    cleaned_pages = await _fetch_and_clean_and_notify(update, all_search_results)
+    if not cleaned_pages:
+        return
+
+    summaries = await _summarize_and_notify_pages(update, cleaned_pages)
+    if not summaries:
+        return
+
+    await _synthesize_and_send_report(update, user_query, summaries)
+
+
 async def _plan_searches(user_query: str) -> list[str]:
     """
     Plans search queries based on the user's input.
@@ -205,32 +243,123 @@ def _search_with_serpapi(query: str, max_results: int) -> list[SearchResult]:
         return []
 
 
-@authorized
-async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def _validate_user_query(update: Update, user_query: str) -> bool:
     """
-    Handle the /digin command.
+    Validates the user query and sends a message if invalid.
+    Returns True if valid, False otherwise.
     """
-    user_query = update.message.text.replace("/digin", "").strip()
     if not user_query or user_query.strip() == "":
         await update.message.reply_text(
-            "My digital shovel is poised and ready, but I can't dig for... well, nothing! "
+            "🎯 My digital shovel is poised and ready, but I can't dig for... well, nothing! "
             "What treasure are we unearthing today? Please provide a query."
+        )
+        return False
+    return True
+
+
+async def _plan_and_notify_searches(update: Update, user_query: str) -> list[str]:
+    """
+    Plans search queries and notifies the user.
+    Returns the list of search queries or an empty list if planning fails.
+    """
+    search_queries = await _plan_searches(user_query)
+
+    if not search_queries:
+        await update.message.reply_text(
+            "🤔 Hmm, my digital compass seems to be spinning in circles! "
+            "Perhaps try a different angle or a more specific query?"
+        )
+        return []
+    else:
+        await update.message.reply_text(
+            "🗺️ I've sketched out my treasure map! Time to start digging!"
+        )
+        return search_queries
+
+
+async def _execute_and_process_searches(
+    update: Update, search_tasks: list
+) -> list[SearchResult]:
+    """
+    Executes search tasks, processes results, and notifies the user.
+    Returns a list of unique SearchResult objects or an empty list if no results.
+    """
+    await update.message.reply_text(
+        "⛏️ *clink clink* I'm digging through the digital dirt for you..."
+    )
+
+    search_results_per_query = await asyncio.gather(*search_tasks)
+
+    all_search_results = []
+    for search_result in search_results_per_query:
+        if search_result:  # _search_with_serpapi can return [] on error
+            all_search_results.extend(search_result)
+
+    if not all_search_results:
+        await update.message.reply_text(
+            "😅 Looks like I hit bedrock! Couldn't find any nuggets of wisdom for your query."
+        )
+        return []
+    else:
+        await update.message.reply_text(
+            "💎 Eureka! Found some shiny information! Let me polish it up..."
+        )
+        return all_search_results
+
+
+async def _fetch_and_clean_and_notify(
+    update: Update, search_results: list[SearchResult]
+) -> list[CleanedPageContent]:
+    """
+    Fetches and cleans pages from search results and notifies the user.
+    Returns a list of CleanedPageContent objects or an empty list if cleaning fails.
+    """
+    await update.message.reply_text(
+        "✨ Sparkling clean! Now let me organize these gems..."
+    )
+
+    cleaned_pages = await _fetch_and_clean_pages(search_results)
+    if not cleaned_pages:
+        await update.message.reply_text(
+            "🧹 Oops! My digital broom broke while cleaning up the information!"
+        )
+        return []
+    return cleaned_pages
+
+
+async def _summarize_and_notify_pages(
+    update: Update, cleaned_pages: list[CleanedPageContent]
+) -> list[SummerizedPageContent]:
+    """
+    Summarizes cleaned pages and notifies the user.
+    Returns a list of SummarizedPageContent objects or an empty list if summarization fails.
+    """
+    await update.message.reply_text(
+        "📚 Perfect! Now let me weave these threads into a beautiful tapestry..."
+    )
+
+    summaries = await _summarize_pages(cleaned_pages)
+    if not summaries:
+        await update.message.reply_text(
+            "📝 My digital quill ran out of ink while summarizing!"
+        )
+        return []
+    return summaries
+
+
+async def _synthesize_and_send_report(
+    update: Update, user_query: str, summaries: list[SummerizedPageContent]
+):
+    """
+    Synthesizes the final report and sends it to the user.
+    """
+    report = await _synthesize_report(user_query, summaries)
+
+    if not report:
+        await update.message.reply_text(
+            "🧩 My digital puzzle pieces just won't fit together!"
         )
         return
 
-    search_queries = await _plan_searches(user_query)
-
-    all_search_results = []
-    for query in search_queries:
-        results_for_query = _search_with_serpapi(
-            query=query,
-            max_results=settings.DIGIN_MAX_RESULTS,
-        )
-        all_search_results.extend(results_for_query)
-
-    cleaned_pages = await _fetch_and_clean_pages(all_search_results)
-    summeries = await _summarize_pages(cleaned_pages)
-    report = await _synthesize_report(user_query, summeries)
     formatted_report = _format_report(report)
-
     await update.message.reply_text(formatted_report)
