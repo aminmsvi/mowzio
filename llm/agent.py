@@ -18,7 +18,7 @@ class Agent:
 
     def __init__(
         self,
-        tools: List[Tool],
+        tools: List[Tool] = [],
         llm_settings: LLmSettings = default_llm_settings,
         system_prompt: str = "You are a helpful assistant.",
         memory: Memory = InMemoryWindowBufferMemory(),
