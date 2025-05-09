@@ -288,11 +288,13 @@ async def _execute_and_process_searches(
             "😅 Looks like I hit bedrock! Couldn't find any nuggets of wisdom for your query."
         )
         return []
-    else:
-        await update.message.reply_text(
-            "💎 Eureka! Found some shiny information! Let me polish it up..."
-        )
-        return all_search_results
+
+    message = "💎 Eureka! Found some shiny information!\n\n"
+    for result in all_search_results:
+        message += f"{result.title}\n{result.url}\n\n"
+    message += "Now let me polish it up..."
+    await update.message.reply_text(message)
+    return all_search_results
 
 
 async def _fetch_and_clean_and_notify(
@@ -302,16 +304,16 @@ async def _fetch_and_clean_and_notify(
     Fetches and cleans pages from search results and notifies the user.
     Returns a list of CleanedPageContent objects or an empty list if cleaning fails.
     """
-    await update.message.reply_text(
-        "✨ Sparkling clean! Now let me organize these gems..."
-    )
-
     cleaned_pages = await _fetch_and_clean_pages(search_results)
     if not cleaned_pages:
         await update.message.reply_text(
             "🧹 Oops! My digital broom broke while cleaning up the information!"
         )
         return []
+
+    await update.message.reply_text(
+        "✨ Sparkling clean! Now let me organize these gems..."
+    )
     return cleaned_pages
 
 
