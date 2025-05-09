@@ -258,11 +258,6 @@ async def _synthesize_report(
 
     await update.message.reply_text(report.synthesized_answer)
 
-    all_sources_message = "Sources consulted:\n"
-    for source in report.all_sources_consulted:
-        all_sources_message += f"{source.title}\n{source.url}\n\n"
-    await update.message.reply_text(all_sources_message)
-
 
 def _search_with_serpapi(query: str, max_results: int) -> list[SearchResult]:
     """
