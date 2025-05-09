@@ -206,18 +206,6 @@ async def _synthesize_report(
     )
 
 
-def _format_report(report: FinalReport) -> str:
-    """
-    Formats the final report into a text string for the user.
-    """
-    response_text = report.synthesized_answer
-    if report.all_sources_consulted:
-        response_text += "\n\nSources Consulted:\n"
-        for src in report.all_sources_consulted:
-            response_text += f"- {src.title}: {src.url}\n"
-    return response_text
-
-
 def _search_with_serpapi(query: str, max_results: int) -> list[SearchResult]:
     """
     Search using SerpApi (Google Search) for the given query.
@@ -361,5 +349,4 @@ async def _synthesize_and_send_report(
         )
         return
 
-    formatted_report = _format_report(report)
-    await update.message.reply_text(formatted_report)
+    await update.message.reply_text(report)
