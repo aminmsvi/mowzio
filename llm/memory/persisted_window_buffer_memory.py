@@ -1,6 +1,7 @@
 from typing import List, Optional
 import logging
 
+from app.db.redis.redis_interface import RedisInterface
 from app.db.redis.redis_adapter import RedisAdapter
 from .memory import Memory, Message
 
@@ -13,7 +14,11 @@ class PersistedWindowBufferMemory(Memory):
     Preserves system prompts while keeping only the most recent messages.
     """
 
-    def __init__(self, window_size: int = 20):
+    def __init__(
+        self,
+        redis: RedisInterface = RedisAdapter(),
+        window_size: int = 20,
+    ):
         """
         Initialize a message history with a maximum window size.
 
@@ -24,7 +29,7 @@ class PersistedWindowBufferMemory(Memory):
         self.logger = logging.getLogger(__name__)
 
         self._window_size = window_size
-        self._redis: RedisAdapter = RedisAdapter()
+        self._redis = redis
         self._messages_key = f"{REDIS_KEY_PREFIX}messages"
         self.logger.debug(
             f"Initialized WindowBufferedMemory with window_size={window_size}"
