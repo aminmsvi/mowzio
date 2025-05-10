@@ -4,9 +4,10 @@ import redis
 from redis.exceptions import RedisError
 
 from app.config import settings
+from app.db.redis.redis_interface import RedisInterface
 
 
-class RedisAdapter:
+class RedisAdapter(RedisInterface):
     """
     A wrapper for Redis client that provides a clean interface for database operations.
     """
