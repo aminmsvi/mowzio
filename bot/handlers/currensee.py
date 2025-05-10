@@ -8,7 +8,7 @@ from requests.exceptions import RequestException, Timeout, JSONDecodeError
 from telegram import Update
 from telegram.ext import ContextTypes
 from app.config import settings
-from app.db.redis import RedisFactory, RedisAdapter
+from app.db.redis import RedisAdapter
 from bot.decorators import authorized
 
 
@@ -59,7 +59,7 @@ async def currensee(update: Update, _: ContextTypes.DEFAULT_TYPE):
     """
     Handler for the /exchange_rates command. Fetches exchange rates, using cache if possible.
     """
-    redis_adapter = RedisFactory.create_adapter()
+    redis_adapter = RedisAdapter()
     response_message = ERROR_FETCH_FAILED  # Default message
 
     try:

@@ -1,12 +1,10 @@
 from typing import List, Optional
 import logging
 
-from app.db.redis.redis_factory import RedisFactory
 from app.db.redis.redis_adapter import RedisAdapter
 from .memory import Memory, Message
 
 REDIS_KEY_PREFIX = "chat:memory:"
-REDIS_DB = 0
 
 
 class PersistedWindowBufferMemory(Memory):
@@ -26,7 +24,7 @@ class PersistedWindowBufferMemory(Memory):
         self.logger = logging.getLogger(__name__)
 
         self._window_size = window_size
-        self._redis: RedisAdapter = RedisFactory.create_adapter(db=REDIS_DB)
+        self._redis: RedisAdapter = RedisAdapter()
         self._messages_key = f"{REDIS_KEY_PREFIX}messages"
         self.logger.debug(
             f"Initialized WindowBufferedMemory with window_size={window_size}"
