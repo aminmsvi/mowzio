@@ -1,6 +1,9 @@
 from typing import Dict, List, Optional
+
 import redis
 from redis.exceptions import RedisError
+
+from app.config import settings
 
 
 class RedisAdapter:
@@ -10,9 +13,6 @@ class RedisAdapter:
 
     def __init__(
         self,
-        host: str,
-        port: int,
-        password: str,
         db: int = 0,
         socket_timeout: int = 5,
         retry_on_timeout: bool = True,
@@ -21,17 +21,14 @@ class RedisAdapter:
         Initialize the Redis adapter with connection parameters.
 
         Args:
-            host: Redis server hostname
-            port: Redis server port
-            password: Redis password
             db: Redis database number (default: 0)
             socket_timeout: Socket timeout in seconds (default: 5)
             retry_on_timeout: Whether to retry on timeout (default: True)
         """
         self._connection_params = {
-            "host": host,
-            "port": port,
-            "password": password,
+            "host": settings.REDIS_HOST,
+            "port": settings.REDIS_PORT,
+            "password": settings.REDIS_PASSWORD,
             "db": db,
             "socket_timeout": socket_timeout,
             "retry_on_timeout": retry_on_timeout,
