@@ -175,13 +175,13 @@ async def _summarize_pages(
         "📚 Perfect! Now let me weave these threads into a beautiful tapestry..."
     )
 
-    system_prompt = PAGE_SUMMARIZER_PROMPT.replace("{query}", user_query)
     summaries = []
-    summarizer_agent = Agent(system_prompt=system_prompt)
+    summarizer_agent = Agent(system_prompt=PAGE_SUMMARIZER_PROMPT)
     for cleaned_page in cleaned_pages:
         try:
+            user_message = f"Original User Query: {user_query}\n\nSource Content: {cleaned_page.cleaned_text}"
             summary_result = await asyncio.to_thread(
-                summarizer_agent.process, cleaned_page.cleaned_text
+                summarizer_agent.process, user_message
             )
             if summary_result:
                 summarized_page = SummerizedPageContent(
