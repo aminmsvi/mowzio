@@ -17,8 +17,45 @@ from llm.prompts.digin_prompts import (
     SYNTHESIS_PROMPT,
 )
 
-# Setup logger
 logger = logging.getLogger(__name__)
+
+
+@authorized
+async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle the /digin command.
+    """
+    user_query = update.message.text.replace("/digin", "").strip()
+
+    if not await _validate_user_query(update, user_query):
+        return
+
+    search_queries = await _plan_searches(update, user_query)
+    if not search_queries:
+        return
+
+    search_tasks = []
+    for query in search_queries:
+        task = asyncio.to_thread(
+            _search_with_serpapi,
+            query,
+            settings.DIGIN_MAX_RESULTS,
+        )
+        search_tasks.append(task)
+
+    all_search_results = await _execute_and_process_searches(update, search_tasks)
+    if not all_search_results:
+        return
+
+    cleaned_pages = await _fetch_and_clean_pages(update, all_search_results)
+    if not cleaned_pages:
+        return
+
+    summaries = await _summarize_pages(update, user_query, cleaned_pages)
+    if not summaries:
+        return
+
+    await _synthesize_report(update, user_query, summaries)
 
 
 @dataclass(frozen=True)
@@ -44,44 +81,6 @@ class FinalReport:
     original_query: str
     synthesized_answer: str
     all_sources_consulted: list[SearchResult]
-
-
-@authorized
-async def digin(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Handle the /digin command.
-    """
-    user_query = update.message.text.replace("/digin", "").strip()
-
-    if not await _validate_user_query(update, user_query):
-        return
-
-    search_queries = await _plan_searches(update, user_query)
-    if not search_queries:
-        return
-
-    search_tasks = []
-    for query in search_queries:
-        task = asyncio.to_thread(
-            _search_with_serpapi,
-            query,  # Pass arguments positionally to asyncio.to_thread
-            settings.DIGIN_MAX_RESULTS,
-        )
-        search_tasks.append(task)
-
-    all_search_results = await _execute_and_process_searches(update, search_tasks)
-    if not all_search_results:
-        return
-
-    cleaned_pages = await _fetch_and_clean_pages(update, all_search_results)
-    if not cleaned_pages:
-        return
-
-    summaries = await _summarize_pages(update, user_query, cleaned_pages)
-    if not summaries:
-        return
-
-    await _synthesize_report(update, user_query, summaries)
 
 
 async def _plan_searches(update: Update, user_query: str) -> list[str]:
@@ -130,23 +129,24 @@ async def _fetch_and_clean_pages(
     cleaned_pages = []
     for result in search_results:
         try:
-            # Download the page content using trafilatura's fetch_url
             downloaded_file = await asyncio.to_thread(fetch_url, result.url)
-            if downloaded_file:
-                # Extract text content from the downloaded file
-                cleaned_text = await asyncio.to_thread(extract, downloaded_file)
-                if cleaned_text:  # Ensure we have some text after extraction
-                    cleaned_page = CleanedPageContent(
-                        result=result,
-                        cleaned_text=cleaned_text,
-                    )
-                    cleaned_pages.append(cleaned_page)
-                else:
-                    logger.warning(
-                        f"No content extracted from {result.url}. Extraction might have failed or page was empty."
-                    )
-            else:
+            if not downloaded_file:
                 logger.warning(f"Failed to download content from {result.url}.")
+                continue
+
+            cleaned_text = await asyncio.to_thread(extract, downloaded_file)
+            if not cleaned_text:
+                logger.warning(
+                    f"No content extracted from {result.url}. Extraction might have failed or page was empty."
+                )
+                continue
+
+            cleaned_page = CleanedPageContent(
+                result=result,
+                cleaned_text=cleaned_text,
+            )
+            cleaned_pages.append(cleaned_page)
+
         except Exception as e:
             logger.error(f"Error fetching or cleaning {result.url}: {e}", exc_info=True)
             continue
@@ -175,24 +175,26 @@ async def _summarize_pages(
         "📚 Perfect! Now let me weave these threads into a beautiful tapestry..."
     )
 
-    system_prompt = PAGE_SUMMARIZER_PROMPT.replace("{query}", user_query)
     summaries = []
-    summarizer_agent = Agent(system_prompt=system_prompt)
+    summarizer_agent = Agent(system_prompt=PAGE_SUMMARIZER_PROMPT)
     for cleaned_page in cleaned_pages:
         try:
+            user_message = f"Original User Query: {user_query}\n\nSource Content:\n{cleaned_page.cleaned_text}"
             summary_result = await asyncio.to_thread(
-                summarizer_agent.process, cleaned_page.cleaned_text
+                summarizer_agent.process, user_message
             )
-            if summary_result:
-                summarized_page = SummerizedPageContent(
-                    result=cleaned_page.result,
-                    summary=summary_result,
-                )
-                summaries.append(summarized_page)
-            else:
+            if not summary_result:
                 logger.warning(
-                    f"No summary generated for {cleaned_page.result.url}. Summarization might have failed or content was unsuitable."
+                    f"No summary generated for {cleaned_page.result.url}. "
+                    "Summarization might have failed or content was unsuitable."
                 )
+                continue
+
+            summarized_page = SummerizedPageContent(
+                result=cleaned_page.result,
+                summary=summary_result,
+            )
+            summaries.append(summarized_page)
         except Exception as e:
             logger.error(
                 f"Error summarizing {cleaned_page.result.url}: {e}", exc_info=True
@@ -275,7 +277,10 @@ def _search_with_serpapi(query: str, max_results: int) -> list[SearchResult]:
         organic_results = results.get("organic_results", [])
 
         return [
-            SearchResult(title=r.get("title", "No Title"), url=r.get("link", ""))
+            SearchResult(
+                title=r.get("title", "No Title"),
+                url=r.get("link", ""),
+            )
             for r in organic_results
             if r.get("link")
         ]
