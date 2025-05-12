@@ -8,6 +8,7 @@ from bot.handler_registery import register_handlers
 from bot.ptb import ptb
 from config import settings
 
+
 # Configure logging first
 logging.config.dictConfig(
     {

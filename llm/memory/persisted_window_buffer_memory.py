@@ -6,6 +6,7 @@ from db.redis.redis_interface import RedisInterface
 
 from .memory import Memory, Message
 
+
 REDIS_KEY_PREFIX = "chat:memory:"
 
 

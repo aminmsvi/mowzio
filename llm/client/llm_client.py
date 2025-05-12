@@ -4,8 +4,7 @@ from openai import APIConnectionError, APIError, OpenAI, RateLimitError
 
 from llm.config import LLmSettings, default_llm_settings
 from llm.memory import Memory, Message
-from llm.memory.in_memory_window_buffer_memory import \
-    InMemoryWindowBufferMemory
+from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
 
 
 class LlmClient:

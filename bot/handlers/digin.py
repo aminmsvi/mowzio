@@ -11,8 +11,12 @@ from trafilatura import extract, fetch_url
 from bot.decorators import authorized
 from config import settings
 from llm.agent import Agent
-from llm.prompts.digin_prompts import (PAGE_SUMMARIZER_PROMPT,
-                                       SEARCH_PLAN_PROMPT, SYNTHESIS_PROMPT)
+from llm.prompts.digin_prompts import (
+    PAGE_SUMMARIZER_PROMPT,
+    SEARCH_PLAN_PROMPT,
+    SYNTHESIS_PROMPT,
+)
+
 
 logger = logging.getLogger(__name__)
 

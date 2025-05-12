@@ -1,11 +1,11 @@
 fmt:
-	black . && ruff format && isort .
+	ruff check --fix && ruff format
 
 lint:
 	ruff check
 
-deps:
-	pip install -r requirements.txt
+deps-dev:
+	pip install -r requirements/dev.txt
 
 run:
 	gunicorn main:app -k uvicorn.workers.UvicornWorker

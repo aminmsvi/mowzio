@@ -7,6 +7,7 @@ from telegram import Update
 
 from bot.ptb import ptb
 
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
