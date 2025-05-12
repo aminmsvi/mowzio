@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, filters
 
+from bot.handlers import amnesia, currensee, digin, handle_message, start
 from bot.ptb import ptb
-from bot.handlers import currensee, handle_message, start, amnesia, digin
 
 
 # Add handlers to the application

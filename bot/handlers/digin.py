@@ -3,19 +3,16 @@ import json
 import logging
 from dataclasses import dataclass
 
+from serpapi import GoogleSearch
 from telegram import Update
 from telegram.ext import ContextTypes
-from serpapi import GoogleSearch
 from trafilatura import extract, fetch_url
 
-from config import settings
 from bot.decorators import authorized
+from config import settings
 from llm.agent import Agent
-from llm.prompts.digin_prompts import (
-    SEARCH_PLAN_PROMPT,
-    PAGE_SUMMARIZER_PROMPT,
-    SYNTHESIS_PROMPT,
-)
+from llm.prompts.digin_prompts import (PAGE_SUMMARIZER_PROMPT,
+                                       SEARCH_PLAN_PROMPT, SYNTHESIS_PROMPT)
 
 logger = logging.getLogger(__name__)
 
@@ -229,7 +226,7 @@ async def _synthesize_report(
     context_for_synthesis += "Please synthesize the information from the following summaries to answer the user's query. Cite the source title or URL when using information from a specific source.\n\n"
 
     for i, summarized_page in enumerate(summarized_pages):
-        context_for_synthesis += f"Source {i+1}:\n"
+        context_for_synthesis += f"Source {i + 1}:\n"
         context_for_synthesis += f"Title: {summarized_page.result.title}\n"
         context_for_synthesis += f"URL: {summarized_page.result.url}\n"
         context_for_synthesis += f"Summary:\n{summarized_page.summary}\n\n"

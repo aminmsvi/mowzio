@@ -1,5 +1,6 @@
-import pytest
 import math
+
+import pytest
 
 from llm.tools.calculator_tool import CalculatorTool
 

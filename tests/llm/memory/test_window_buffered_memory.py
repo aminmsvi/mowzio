@@ -1,7 +1,7 @@
 import pytest
 
-from llm.memory import PersistedWindowBufferMemory, Message
 from db.redis import FakeRedisAdapter
+from llm.memory import Message, PersistedWindowBufferMemory
 
 
 @pytest.fixture

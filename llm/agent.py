@@ -4,7 +4,9 @@ from typing import Dict, List, Optional
 
 from llm.client import LlmClient
 from llm.memory import Memory
-from llm.memory.in_memory_window_buffer_memory import InMemoryWindowBufferMemory
+from llm.memory.in_memory_window_buffer_memory import \
+    InMemoryWindowBufferMemory
+
 from .config import LLmSettings, default_llm_settings
 from .prompts.tool_usage_prompt import TOOL_USAGE_PROMPT
 from .tools import Tool

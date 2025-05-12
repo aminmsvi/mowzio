@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod
 import json
-from typing import List, Optional, Literal
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import List, Literal, Optional
 
 
 @dataclass

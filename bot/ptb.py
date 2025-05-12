@@ -1,4 +1,5 @@
 from telegram.ext import Application
+
 from config import settings
 
 # Initialize python telegram bot using settings
