@@ -8,7 +8,7 @@ from telegram.ext import ContextTypes
 from serpapi import GoogleSearch
 from trafilatura import extract, fetch_url
 
-from app.config import settings
+from config import settings
 from bot.decorators import authorized
 from llm.agent import Agent
 from llm.prompts.digin_prompts import (

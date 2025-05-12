@@ -7,8 +7,8 @@ import requests
 from requests.exceptions import RequestException, Timeout, JSONDecodeError
 from telegram import Update
 from telegram.ext import ContextTypes
-from app.config import settings
-from app.db.redis import RedisAdapter
+from config import settings
+from db.redis import RedisAdapter
 from bot.decorators import authorized
 
 

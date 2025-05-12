@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Any
 import time
 
-from app.db.redis.redis_interface import RedisInterface
+from db.redis.redis_interface import RedisInterface
 
 
 class FakeRedisAdapter(RedisInterface):

@@ -1,8 +1,8 @@
 from typing import List, Optional
 import logging
 
-from app.db.redis.redis_interface import RedisInterface
-from app.db.redis.redis_adapter import RedisAdapter
+from db.redis.redis_interface import RedisInterface
+from db.redis.redis_adapter import RedisAdapter
 from .memory import Memory, Message
 
 REDIS_KEY_PREFIX = "chat:memory:"

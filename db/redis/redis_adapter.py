@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 import redis
 from redis.exceptions import RedisError
 
-from app.config import settings
-from app.db.redis.redis_interface import RedisInterface
+from config import settings
+from db.redis.redis_interface import RedisInterface
 
 
 class RedisAdapter(RedisInterface):

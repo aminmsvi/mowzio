@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.config import settings
+from config import settings
 
 
 @dataclass

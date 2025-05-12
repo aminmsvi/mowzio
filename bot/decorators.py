@@ -1,7 +1,7 @@
 from functools import wraps
 from telegram import Update
 from telegram.ext import ContextTypes
-from app.config import settings
+from config import settings
 
 
 def authorized(handler):
