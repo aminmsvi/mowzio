@@ -1,15 +1,16 @@
 import json
 import logging
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Tuple, Any
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
-from requests.exceptions import RequestException, Timeout, JSONDecodeError
+from requests.exceptions import JSONDecodeError, RequestException, Timeout
 from telegram import Update
 from telegram.ext import ContextTypes
-from app.config import settings
-from app.db.redis import RedisAdapter
+
 from bot.decorators import authorized
+from config import settings
+from db.redis import RedisAdapter
 
 
 # Define a structure for the items to scrape
@@ -130,7 +131,7 @@ async def _fetch_and_cache_rates(redis_adapter: RedisAdapter) -> List[ExchangeRa
 async def _fetch_fresh_exchange_rates() -> List[ExchangeRateItem]:
     """Fetches and parses fresh exchange rate data from the source URL."""
     api_url = f"http://api.navasan.tech/latest/?api_key={settings.NAVASAN_API_KEY}"
-    logger.info(f"Attempting to fetch data from Navasan API")
+    logger.info("Attempting to fetch data from Navasan API")
 
     session = requests.Session()
     extracted_rates: List[ExchangeRateItem] = []

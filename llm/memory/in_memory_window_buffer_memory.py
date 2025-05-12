@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List, Optional, Deque
+from typing import Deque, List, Optional
 
 from .memory import Memory, Message
 

@@ -1,11 +1,12 @@
-from http import HTTPStatus
 import logging
+from http import HTTPStatus
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import FileResponse
 from telegram import Update
 
 from bot.ptb import ptb
+
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

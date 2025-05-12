@@ -1,9 +1,11 @@
-from typing import List, Optional
 import logging
+from typing import List, Optional
 
-from app.db.redis.redis_interface import RedisInterface
-from app.db.redis.redis_adapter import RedisAdapter
+from db.redis.redis_adapter import RedisAdapter
+from db.redis.redis_interface import RedisInterface
+
 from .memory import Memory, Message
+
 
 REDIS_KEY_PREFIX = "chat:memory:"
 
