@@ -1,7 +1,8 @@
 import logging.config
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi_mcp import FastApiMCP
 
 from api.routes import router as api_router
 from bot.handler_registery import register_handlers
@@ -51,8 +52,16 @@ async def lifespan(_: FastAPI):
         await ptb.stop()
 
 
-# Initialize FastAPI app
 app = FastAPI(lifespan=lifespan, title="Mowzio Bot")
 
-# Include API routes
+
+@app.get(path="/echo", operation_id="echo_the_request")
+async def echo(request: Request):
+    return {"message": f"Echoing {request.body}"}
+
+
 app.include_router(api_router)
+
+mcp = FastApiMCP(app)
+
+mcp.mount()
